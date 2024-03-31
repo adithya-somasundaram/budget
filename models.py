@@ -12,10 +12,22 @@ class TransactionType(enum.Enum):
     CHECK = 4
     VENMO = 5
 
+class CreditSource(enum.Enum):
+    FIDELITY = 1
+    KEYPOINT = 2
+
 class Transaction(db.Model):
     id = Column(Integer, primary_key = True)
     amount_in_cents = Column(Integer, nullable=False)
     type = Column(Enum(TransactionType), nullable=False)
+    description = Column(String(200))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+class CreditPayments(db.Model):
+    id = Column(Integer, primary_key = True)
+    amount_in_cents = Column(Integer, nullable=False)
+    credit_type = Column(Enum(TransactionType), nullable=False)
     description = Column(String(200))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
