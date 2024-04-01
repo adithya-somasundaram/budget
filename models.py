@@ -24,10 +24,10 @@ class Transaction(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
 
-class CreditPayments(db.Model):
+class CreditPayment(db.Model):
     id = Column(Integer, primary_key = True)
     amount_in_cents = Column(Integer, nullable=False)
-    credit_type = Column(Enum(TransactionType), nullable=False)
+    credit_type = Column(Enum(CreditSource), nullable=False)
     description = Column(String(200))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
