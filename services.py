@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy.sql import func
 
 from app import db
@@ -7,11 +9,25 @@ session = db.session
 
 
 def create_new_transaction(
-    amount_in_cents: int, type: TransactionType, description: str
+    amount_in_cents: int,
+    type: TransactionType,
+    description: str,
+    credit_source: CreditSource = None,
 ):
     """Creates a transaction of type type. By default, transactions are stored as negative."""
+    # Credit transactions require a source
+    if type == TransactionType.CREDIT and not credit_source:
+        print("Need to input credit source for credit transaction!")
+        return
+    elif type != TransactionType.CREDIT and credit_source:
+        print(f"No credit source should be inputted for transaction type {type}")
+        return
+
     new_transaction = Transaction(
-        amount_in_cents=-amount_in_cents, type=type, description=description
+        amount_in_cents=-amount_in_cents,
+        type=type,
+        description=description,
+        credit_type=credit_source,
     )
     try:
         session.add(new_transaction)
@@ -38,9 +54,18 @@ def create_new_credit_payment(amount_in_cents: int, type: CreditSource, descript
     new_payment = CreditPayment(
         amount_in_cents=amount_in_cents, credit_type=type, description=description
     )
+    today = date.today()
+    transaction_message = f"Credit payment for {type} on {today}"
     try:
         session.add(new_payment)
-        session.commit()
+
+        # Remove paid credit amount from credit bucket and deduct from debit
+        create_new_transaction(
+            -amount_in_cents, TransactionType.CREDIT, transaction_message, type
+        )
+        create_new_transaction(
+            amount_in_cents, TransactionType.DEBIT, transaction_message
+        )
         print(
             "Successfully create credit payment for "
             + str(type)
