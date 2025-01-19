@@ -25,6 +25,7 @@ class Transaction(db.Model):
     id = Column(Integer, primary_key=True)
     amount_in_cents = Column(Integer, nullable=False)
     type = Column(Enum(TransactionType), nullable=False)
+    credit_type = Column(Enum(CreditSource), nullable=True)
     description = Column(String(200))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
