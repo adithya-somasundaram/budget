@@ -17,12 +17,15 @@ def create_new_transaction(
     if type == TransactionType.CREDIT and not credit_source:
         print("Need to input credit source for credit transaction!")
         return
+    elif type != TransactionType.CREDIT and credit_source:
+        print(f"No credit source should be inputted for transaction type {type}")
+        return
 
     new_transaction = Transaction(
         amount_in_cents=-amount_in_cents,
         type=type,
         description=description,
-        credit_source=credit_source,
+        credit_type=credit_source,
     )
     try:
         session.add(new_transaction)
@@ -51,7 +54,12 @@ def create_new_credit_payment(amount_in_cents: int, type: CreditSource, descript
     )
     try:
         session.add(new_payment)
-        session.commit()
+
+        # Remove paid credit amount from credit bucket and deduct from debit
+        create_new_transaction(
+            -amount_in_cents, TransactionType.CREDIT, description, type
+        )
+        create_new_transaction(amount_in_cents, TransactionType.DEBIT, description)
         print(
             "Successfully create credit payment for "
             + str(type)
