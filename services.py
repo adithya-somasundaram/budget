@@ -9,6 +9,7 @@ session = db.session
 def create_new_transaction(
     amount_in_cents: int, type: TransactionType, description: str
 ):
+    """Creates a transaction of type type. By default, transactions are stored as negative."""
     new_transaction = Transaction(
         amount_in_cents=-amount_in_cents, type=type, description=description
     )
@@ -33,6 +34,7 @@ def create_new_transaction(
 
 
 def create_new_credit_payment(amount_in_cents: int, type: CreditSource, description):
+    """Creates a new credit payment."""
     new_payment = CreditPayment(
         amount_in_cents=amount_in_cents, credit_type=type, description=description
     )
@@ -56,8 +58,9 @@ def create_new_credit_payment(amount_in_cents: int, type: CreditSource, descript
         )
 
 
-def print_cents_in_dollars(input):
-    amount = input
+def print_cents_in_dollars(value):
+    """Default printing function. Input value in cents"""
+    amount = value
     if amount < 0:
         amount = amount * -1
     dollars = int(amount / 100)
@@ -86,7 +89,7 @@ def print_cents_in_dollars(input):
             dollar_output = "," + dollar_output
 
     return (
-        ("-" if input < 0 else "")
+        ("-" if value < 0 else "")
         + "$"
         + (dollar_output if len(dollar_output) > 0 else "0")
         + "."
@@ -95,6 +98,7 @@ def print_cents_in_dollars(input):
 
 
 def get_summary():
+    """Sums and returns all transactions by type. Also calculates total net value."""
     totals = (
         session.query(
             Transaction.type,
