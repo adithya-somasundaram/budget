@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy.sql import func
 
 from src.credit_payments.model import CreditSource
@@ -46,7 +48,7 @@ def create_new_transaction(
         )
 
 
-def print_cents_in_dollars(value):
+def cents_to_dollars_str(value):
     """Default printing function. Input value in cents"""
     amount = value
     if amount < 0:
@@ -85,20 +87,53 @@ def print_cents_in_dollars(value):
     )
 
 
-def get_summary(session):
+def get_summary(session, to_date: date = None):
     """Sums and returns all transactions by type. Also calculates total net value."""
-    totals = (
-        session.query(
-            Transaction.type,
-            func.sum(Transaction.amount_in_cents).label("amount_in_cents"),
-        )
-        .group_by(Transaction.type)
-        .all()
+    totals = session.query(
+        Transaction.type,
+        func.sum(Transaction.amount_in_cents).label("amount_in_cents"),
     )
 
+    # If date passed in, only fetch transactions up till that point
+    if to_date:
+        totals = totals.filter(func.DATE(Transaction.created_at) <= to_date)
+
+    totals = totals.group_by(Transaction.type).all()
+    output = ""
     grand_total = 0
     for total in totals:
         grand_total += total.amount_in_cents
-        print(str(total.type) + ": " + print_cents_in_dollars(total.amount_in_cents))
+        output += "{0:10} : {1}\n".format(
+            total.type.name, cents_to_dollars_str(total.amount_in_cents)
+        )
 
-    print("TOTAL: " + print_cents_in_dollars(grand_total))
+    return "{0:10}TOTAL: {1}".format(output, cents_to_dollars_str(grand_total))
+
+
+def get_all_transactions(session, from_date: date):
+    """Gets and groups all transactions by date. Prints each days transactions along with summary from that date"""
+    transaction_groups = (
+        session.query(
+            func.DATE(Transaction.created_at),
+            func.group_concat(
+                Transaction.type.op("||")("/")
+                .op("||")(Transaction.amount_in_cents)
+                .op("||")("/")
+                .op("||")(Transaction.description)
+            ).label("transactions"),
+        )
+        .filter(func.DATE(Transaction.created_at) >= from_date)
+        .group_by(func.DATE(Transaction.created_at))
+    ).all()
+
+    for group in transaction_groups:
+        day, transactions_for_date = group[0], group[1].split(",")
+        print(f"\n{day}")
+
+        for tr in transactions_for_date:
+            t_type, t_amount, t_description = tr.split("/")
+            amount_str = cents_to_dollars_str(int(t_amount))
+            print("{0} \t{1:10} \t{2}".format(t_type, amount_str, t_description))
+
+        print(f"\nTotals on {day}")
+        print(get_summary(session, day))
