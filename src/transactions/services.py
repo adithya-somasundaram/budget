@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy.sql import func
 
 from src.credit_payments.model import CreditSource
@@ -46,7 +48,7 @@ def create_new_transaction(
         )
 
 
-def print_cents_in_dollars(value):
+def cents_to_dollars_str(value):
     """Default printing function. Input value in cents"""
     amount = value
     if amount < 0:
@@ -99,6 +101,37 @@ def get_summary(session):
     grand_total = 0
     for total in totals:
         grand_total += total.amount_in_cents
-        print(str(total.type) + ": " + print_cents_in_dollars(total.amount_in_cents))
+        print(str(total.type) + ": " + cents_to_dollars_str(total.amount_in_cents))
 
-    print("TOTAL: " + print_cents_in_dollars(grand_total))
+    print("TOTAL: " + cents_to_dollars_str(grand_total))
+
+
+def get_all_transactions(session, from_date: date):
+    transaction_groups = (
+        session.query(
+            func.DATE(Transaction.created_at),
+            func.group_concat(
+                Transaction.type.op("||")("/")
+                .op("||")(Transaction.amount_in_cents)
+                .op("||")("/")
+                .op("||")(Transaction.description)
+            ).label("transactions"),
+        )
+        .filter(func.DATE(Transaction.created_at) >= from_date)
+        .group_by(func.DATE(Transaction.created_at))
+    ).all()
+
+    for group in transaction_groups:
+        print(group[0])
+        transactions_for_date = group[1].split(",")
+        for tr in transactions_for_date:
+            t_type, t_amount, t_description = tr.split("/")
+            print(f"{t_type} \t{cents_to_dollars_str(int(t_amount))} \t{t_description}")
+        print("")
+
+    # transactions = session.execute(query)
+
+    # query = select(cast(Transaction.created_at, Date))
+    # result = session.execute(query).fetchall()
+
+    # return transaction_groups
