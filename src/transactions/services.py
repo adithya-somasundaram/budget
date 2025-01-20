@@ -127,6 +127,7 @@ def get_all_transactions(session, from_date: date):
         print(f"\n{day}")
         for tr in transactions_for_date:
             t_type, t_amount, t_description = tr.split("/")
-            print(f"{t_type} \t{cents_to_dollars_str(int(t_amount))} \t{t_description}")
+            amount_str = cents_to_dollars_str(int(t_amount))
+            print("{0} \t{1:10} \t{2}".format(t_type, amount_str, t_description))
         print(f"\nTotals on {day}")
         print(get_summary(session, day))
