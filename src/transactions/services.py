@@ -87,23 +87,24 @@ def cents_to_dollars_str(value):
     )
 
 
-def get_summary(session):
+def get_summary(session, from_date: date = None):
     """Sums and returns all transactions by type. Also calculates total net value."""
-    totals = (
-        session.query(
-            Transaction.type,
-            func.sum(Transaction.amount_in_cents).label("amount_in_cents"),
-        )
-        .group_by(Transaction.type)
-        .all()
+    totals = session.query(
+        Transaction.type,
+        func.sum(Transaction.amount_in_cents).label("amount_in_cents"),
     )
 
+    if from_date:
+        totals = totals.filter(func.DATE(Transaction.created_at) <= from_date)
+
+    totals = totals.group_by(Transaction.type).all()
+    output = ""
     grand_total = 0
     for total in totals:
         grand_total += total.amount_in_cents
-        print(str(total.type) + ": " + cents_to_dollars_str(total.amount_in_cents))
+        output += f"{total.type} : {cents_to_dollars_str(total.amount_in_cents)}\n"
 
-    print("TOTAL: " + cents_to_dollars_str(grand_total))
+    return f"{output}TOTAL: {cents_to_dollars_str(grand_total)}"
 
 
 def get_all_transactions(session, from_date: date):
@@ -122,9 +123,10 @@ def get_all_transactions(session, from_date: date):
     ).all()
 
     for group in transaction_groups:
-        print(group[0])
-        transactions_for_date = group[1].split(",")
+        day, transactions_for_date = group[0], group[1].split(",")
+        print(f"\n{day}")
         for tr in transactions_for_date:
             t_type, t_amount, t_description = tr.split("/")
             print(f"{t_type} \t{cents_to_dollars_str(int(t_amount))} \t{t_description}")
-        print("")
+        print(f"\nTotals on {day}")
+        print(get_summary(session, day))
