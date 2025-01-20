@@ -102,9 +102,11 @@ def get_summary(session, from_date: date = None):
     grand_total = 0
     for total in totals:
         grand_total += total.amount_in_cents
-        output += f"{total.type} : {cents_to_dollars_str(total.amount_in_cents)}\n"
+        output += "{0:10} : {1}\n".format(
+            total.type.name, cents_to_dollars_str(total.amount_in_cents)
+        )
 
-    return f"{output}TOTAL: {cents_to_dollars_str(grand_total)}"
+    return "{0:10}TOTAL: {1}".format(output, cents_to_dollars_str(grand_total))
 
 
 def get_all_transactions(session, from_date: date):
