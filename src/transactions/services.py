@@ -128,10 +128,3 @@ def get_all_transactions(session, from_date: date):
             t_type, t_amount, t_description = tr.split("/")
             print(f"{t_type} \t{cents_to_dollars_str(int(t_amount))} \t{t_description}")
         print("")
-
-    # transactions = session.execute(query)
-
-    # query = select(cast(Transaction.created_at, Date))
-    # result = session.execute(query).fetchall()
-
-    # return transaction_groups
