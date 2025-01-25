@@ -41,7 +41,6 @@ def create_new_account(
 def update_account(
     session,
     name: str,
-    account_type: TransactionType,
     value_in_usd_cents: int = None,
     new_name: str = None,
     new_account_type: TransactionType = None,
@@ -50,14 +49,13 @@ def update_account(
         session.query(Account)
         .filter(
             Account.name == name.upper(),
-            Account.type == account_type,
             Account.is_active == True,
         )
         .first()
     )
 
     if not account:
-        raise Exception(f"No account found with name {name} and type {account_type}!")
+        raise Exception(f"No active account found with name {name}!")
 
     if value_in_usd_cents:
         account.value_in_cents = value_in_usd_cents
@@ -79,19 +77,47 @@ def update_account(
 def deactivate_account(
     session,
     name: str,
-    account_type: TransactionType,
 ):
     account: Account = (
         session.query(Account)
-        .filter(Account.name == name.upper(), Account.type == account_type)
+        .filter(Account.name == name.upper(), Account.is_active == True)
         .first()
     )
 
     if not account:
-        raise Exception(f"No account found with name {name} and type {account_type}!")
+        raise Exception(f"No active account found with name {name}!")
 
     account.is_active = False
     session.commit()
 
     print(f"Account {account.id} {name} deactived!")
     return account.id
+
+
+def transfer(session, amount_in_cents, to_account: str, from_account: str):
+    to_account_obj: Account = (
+        session.query(Account)
+        .filter(Account.name == from_account.upper(), Account.is_active == True)
+        .first()
+    )
+    if not to_account_obj:
+        raise Exception(f"No active account found with name {to_account}!")
+
+    from_account_obj: Account = (
+        session.query(Account)
+        .filter(Account.name == from_account.upper(), Account.is_active == True)
+        .first()
+    )
+
+    if not from_account_obj:
+        raise Exception(f"No active account found with name {from_account}!")
+
+    if amount_in_cents > from_account_obj.value_in_cents:
+        raise Exception(
+            f"{amount_in_cents} greater than accounts value {from_account_obj.value_in_cents}!"
+        )
+
+    to_account_obj.value_in_cents += amount_in_cents
+    from_account_obj.value_in_cents -= amount_in_cents
+
+    session.commit()
