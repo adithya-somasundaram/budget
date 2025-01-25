@@ -11,7 +11,7 @@ from src.transactions.model import TransactionType
 timezone = pytz.timezone("America/Los_Angeles")
 
 
-class Accounts(db.Model):
+class Account(db.Model):
     id = Column(Integer, primary_key=True)
     value_in_cents = Column(Integer, nullable=False)
     type = Column(Enum(TransactionType), nullable=False)
@@ -23,7 +23,7 @@ class Accounts(db.Model):
 
 class AccountRecords(db.Model):
     id = Column(Integer, primary_key=True)
-    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
+    account_id = Column(Integer, ForeignKey("account.id"), nullable=False)
     value_in_cents = Column(Integer, nullable=False)
     type = Column(Enum(TransactionType), nullable=False)
     name = Column(String, nullable=False)
