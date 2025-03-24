@@ -2,7 +2,7 @@ from datetime import date
 
 from sqlalchemy.sql import func
 
-from src.credit_payments.model import CreditSource
+from src.accounts.model import Account
 from src.transactions.model import Transaction, TransactionType
 
 
@@ -11,22 +11,29 @@ def create_new_transaction(
     amount_in_cents: int,
     type: TransactionType,
     description: str,
-    credit_source: CreditSource = None,
+    account_name: str = None,
 ):
     """Creates a transaction of type type. By default, transactions are stored as negative."""
     # Credit transactions require a source
-    if type == TransactionType.CREDIT and not credit_source:
-        print("Need to input credit source for credit transaction!")
+    if type == TransactionType.CREDIT and not account_name:
+        print("Need to input credit account for credit transaction!")
         return
-    elif type != TransactionType.CREDIT and credit_source:
-        print(f"No credit source should be inputted for transaction type {type}")
+
+    account: Account = (
+        session.query(Account)
+        .filter(Account.name == account_name.upper(), Account.is_active == True)
+        .first()
+    )
+
+    if not account:
+        print(f"Account of name {account_name} not found. Payment not processed")
         return
 
     new_transaction = Transaction(
         amount_in_cents=-amount_in_cents,
         type=type,
         description=description,
-        credit_type=credit_source,
+        account_id=account.id,
     )
     try:
         session.add(new_transaction)
