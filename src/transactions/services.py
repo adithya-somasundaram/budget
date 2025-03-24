@@ -2,7 +2,7 @@ from datetime import date
 
 from sqlalchemy.sql import func
 
-from src.accounts.model import Account
+from src.accounts.model import Account, AccountType
 from src.transactions.model import Transaction, TransactionType
 
 
@@ -94,24 +94,21 @@ def cents_to_dollars_str(value):
     )
 
 
-def get_summary(session, to_date: date = None):
-    """Sums and returns all transactions by type. Also calculates total net value."""
-    totals = session.query(
-        Transaction.type,
-        func.sum(Transaction.amount_in_cents).label("amount_in_cents"),
+def get_summary(session):
+    """Sums and returns all accounts. Also calculates total net value."""
+
+    accounts: list[Account] = (
+        session.query(Account).filter(Account.is_active == True).all()
     )
-
-    # If date passed in, only fetch transactions up till that point
-    if to_date:
-        totals = totals.filter(func.DATE(Transaction.created_at) <= to_date)
-
-    totals = totals.group_by(Transaction.type).all()
     output = ""
     grand_total = 0
-    for total in totals:
-        grand_total += total.amount_in_cents
+    for account in accounts:
+        if account.type == AccountType.CREDIT:
+            grand_total -= account.value_in_cents
+        else:
+            grand_total += account.value_in_cents
         output += "{0:10} : {1}\n".format(
-            total.type.name, cents_to_dollars_str(total.amount_in_cents)
+            account.name, cents_to_dollars_str(account.value_in_cents)
         )
 
     return "{0:10}TOTAL: {1}".format(output, cents_to_dollars_str(grand_total))
