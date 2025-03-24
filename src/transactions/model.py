@@ -2,12 +2,11 @@ import enum
 from datetime import datetime
 
 import pytz
-from sqlalchemy import Enum
+from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import DateTime, Integer, String
 
 from app import db
-from src.credit_payments.model import CreditSource
 
 timezone = pytz.timezone("America/Los_Angeles")
 
@@ -24,7 +23,7 @@ class Transaction(db.Model):
     id = Column(Integer, primary_key=True)
     amount_in_cents = Column(Integer, nullable=False)
     type = Column(Enum(TransactionType), nullable=False)
-    credit_type = Column(Enum(CreditSource), nullable=True)
+    account_id = Column(Integer, ForeignKey("account.id"), nullable=True)
     description = Column(String(200))
     created_at = Column(DateTime, default=datetime.now(timezone))
     updated_at = Column(DateTime, default=datetime.now(timezone))
