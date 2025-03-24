@@ -1,9 +1,8 @@
-from src.accounts.model import Account
-from src.transactions.model import TransactionType
+from src.accounts.model import Account, AccountType
 
 
 def create_new_account(
-    session, name: str, account_type: TransactionType, value_in_usd_cents: int = None
+    session, name: str, account_type: AccountType, value_in_usd_cents: int = None
 ):
     # dupe check
     dupe: Account = (
@@ -43,7 +42,7 @@ def update_account(
     name: str,
     value_in_usd_cents: int = None,
     new_name: str = None,
-    new_account_type: TransactionType = None,
+    new_account_type: AccountType = None,
 ):
     account: Account = (
         session.query(Account)
