@@ -96,7 +96,6 @@ def cents_to_dollars_str(value):
 
 def get_summary(session):
     """Sums and returns all accounts. Also calculates total net value."""
-
     accounts: list[Account] = (
         session.query(Account).filter(Account.is_active == True).all()
     )
