@@ -16,10 +16,7 @@ def create_new_transaction(
     """Creates a transaction of type type. By default, transactions are stored as negative."""
     # Credit transactions require a source
     if type == TransactionType.CREDIT and not account_name:
-        print("Need to input credit source for credit transaction!")
-        return
-    elif type != TransactionType.CREDIT and account_name:
-        print(f"No credit source should be inputted for transaction type {type}")
+        print("Need to input credit account for credit transaction!")
         return
 
     account: Account = (
