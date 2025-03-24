@@ -2,7 +2,7 @@ from src.accounts.model import Account, AccountType
 
 
 def create_new_account(
-    session, name: str, account_type: AccountType, value_in_usd_cents: int = None
+    session, name: str, account_type: AccountType, value_in_cents: int = None
 ):
     # dupe check
     dupe: Account = (
@@ -17,14 +17,14 @@ def create_new_account(
         )
     elif dupe:
         dupe.is_active = True
-        dupe.value_in_cents = value_in_usd_cents or 0
+        dupe.value_in_cents = value_in_cents or 0
         session.commit()
         return
 
     new_account = Account(
         name=name.upper(),
         type=account_type,
-        value_in_usd_cents=value_in_usd_cents or 0,
+        value_in_cents=value_in_cents or 0,
         is_active=True,
     )
 
@@ -40,7 +40,7 @@ def create_new_account(
 def update_account(
     session,
     name: str,
-    value_in_usd_cents: int = None,
+    value_in_cents: int = None,
     new_name: str = None,
     new_account_type: AccountType = None,
 ):
@@ -56,8 +56,8 @@ def update_account(
     if not account:
         raise Exception(f"No active account found with name {name}!")
 
-    if value_in_usd_cents:
-        account.value_in_cents = value_in_usd_cents
+    if value_in_cents:
+        account.value_in_cents = value_in_cents
 
     if new_name:
         account.name = new_name
@@ -68,7 +68,7 @@ def update_account(
     session.commit()
 
     print(
-        f"Account {account.id} upated with name {new_name or ''}, type {new_account_type or ''}, and value {value_in_usd_cents or ''}"
+        f"Account {account.id} upated with name {new_name or ''}, type {new_account_type or ''}, and value {value_in_cents or ''}"
     )
     return account.id
 
