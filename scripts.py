@@ -1,4 +1,5 @@
 from app import *
+from src.accounts.services import *
 from src.credit_payments.services import *
 from src.transactions.services import *
 
