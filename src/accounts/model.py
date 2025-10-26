@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 
 import pytz
-from sqlalchemy import Enum
+from sqlalchemy import Enum, event
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, String
 
@@ -39,3 +39,18 @@ class AccountRecords(db.Model):
     is_active = Column(Boolean, nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone))
     updated_at = Column(DateTime, default=datetime.now(timezone))
+
+
+@event.listens_for(Account, "after_insert")
+@event.listens_for(Account, "after_update")
+def create_account_record_on_update(_, connection, target):
+    connection.execute(
+        AccountRecords.__table__.insert(),
+        {
+            "account_id": target.id,
+            "value_in_cents": target.value_in_cents,
+            "type": target.type,
+            "name": target.name,
+            "is_active": target.is_active,
+        },
+    )
