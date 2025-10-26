@@ -21,7 +21,7 @@ class BudgetCategory(db.Model):
     __table_args__ = (
         # Unique only when is_active = 1 (i.e., true)
         Index(
-            "uq_active_name",
+            "uq_active_budget_category_name",
             "name",
             unique=True,
             sqlite_where=text("is_active = 1"),
@@ -32,7 +32,7 @@ class BudgetCategory(db.Model):
 class BudgetCategoryRecords(db.Model):
     id = Column(Integer, primary_key=True)
     budget_category_id = Column(
-        Integer, ForeignKey("budget_categories.id"), nullable=False
+        Integer, ForeignKey("budget_category.id"), nullable=False
     )
     is_active = Column(Boolean, nullable=False)
     amount_in_cents = Column(Integer, nullable=False)

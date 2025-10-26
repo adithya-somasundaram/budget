@@ -110,25 +110,6 @@ def cents_to_dollars_str(value):
     )
 
 
-def get_summary(session):
-    """Sums and returns all accounts. Also calculates total net value."""
-    accounts: list[Account] = (
-        session.query(Account).filter(Account.is_active == True).all()
-    )
-    output = ""
-    grand_total = 0
-    for account in accounts:
-        if account.type == AccountType.CREDIT:
-            grand_total -= account.value_in_cents
-        else:
-            grand_total += account.value_in_cents
-        output += "{0:10} : {1}\n".format(
-            account.name, cents_to_dollars_str(account.value_in_cents)
-        )
-
-    return "{0:10}TOTAL: {1}".format(output, cents_to_dollars_str(grand_total))
-
-
 def get_all_transactions(session, from_date: date):
     """Gets and groups all transactions by date. Prints each days transactions along with summary from that date"""
     transaction_groups = (

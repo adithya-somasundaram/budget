@@ -120,3 +120,49 @@ def transfer(session, amount_in_cents, to_account: str, from_account: str):
     from_account_obj.value_in_cents -= amount_in_cents
 
     session.commit()
+
+
+def bulk_create_accounts(session):
+    print("Lets create some accounts! Enter 'quit' at any time to save and exit.")
+
+    name = None
+    account_type = None
+    value = 0
+
+    while True:
+        name = input("Enter account name: ").strip()
+        if name.lower() == "quit":
+            return
+
+        account_type = input("Enter account type: ").strip().lower()
+        if account_type.lower() == "quit":
+            return
+
+        value = input("Enter account value, click 'Enter' to set to 0: ").strip()
+        if value.lower() == "quit":
+            return
+
+        try:
+            create_new_account(session, name, AccountType(account_type), int(value))
+        except Exception as e:
+            print(f"Error creating new account: {str(e)}")
+            session.rollback()
+
+
+def get_summary(session):
+    """Sums and returns all accounts. Also calculates total net value."""
+    accounts: list[Account] = (
+        session.query(Account).filter(Account.is_active == True).all()
+    )
+    output = ""
+    grand_total = 0
+    for account in accounts:
+        if account.type == AccountType.CREDIT:
+            grand_total -= account.value_in_cents
+        else:
+            grand_total += account.value_in_cents
+        output += "{0:10} : {1}\n".format(
+            account.name, cents_to_dollars_str(account.value_in_cents)
+        )
+
+    return "{0:10}TOTAL: {1}".format(output, cents_to_dollars_str(grand_total))
