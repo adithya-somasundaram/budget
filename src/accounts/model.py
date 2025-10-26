@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 
 import pytz
-from sqlalchemy import Enum, event
+from sqlalchemy import Enum, Index, event, text
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, String
 
@@ -28,6 +28,16 @@ class Account(db.Model):
     is_active = Column(Boolean, nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone))
     updated_at = Column(DateTime, default=datetime.now(timezone))
+
+    __table_args__ = (
+        # Unique only when is_active = 1 (i.e., true)
+        Index(
+            "uq_active_name",
+            "name",
+            unique=True,
+            sqlite_where=text("is_active = 1"),
+        ),
+    )
 
 
 class AccountRecords(db.Model):

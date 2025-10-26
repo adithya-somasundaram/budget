@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pytz
-from sqlalchemy import ForeignKey, event
+from sqlalchemy import ForeignKey, Index, event, text
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, String
 
@@ -14,9 +14,19 @@ class BudgetCategory(db.Model):
     id = Column(Integer, primary_key=True)
     is_active = Column(Boolean, nullable=False, default=True)
     amount_in_cents = Column(Integer, nullable=False)
-    name = Column(String(200), nullable=False, unique=True)
+    name = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone))
     updated_at = Column(DateTime, default=datetime.now(timezone))
+
+    __table_args__ = (
+        # Unique only when is_active = 1 (i.e., true)
+        Index(
+            "uq_active_name",
+            "name",
+            unique=True,
+            sqlite_where=text("is_active = 1"),
+        ),
+    )
 
 
 class BudgetCategoryRecords(db.Model):
