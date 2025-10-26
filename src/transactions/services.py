@@ -3,6 +3,7 @@ from datetime import date
 from sqlalchemy.sql import func
 
 from src.accounts.model import Account, AccountType
+from src.budget_categories.model import BudgetCategory
 from src.transactions.model import Transaction, TransactionType
 
 
@@ -11,7 +12,8 @@ def create_new_transaction(
     amount_in_cents: int,
     type: TransactionType,
     description: str,
-    account_name: str = None,
+    account_name: str,
+    budget_category_name: str = None,
 ):
     """Creates a transaction of type type. By default, transactions are stored as negative."""
     # Credit transactions require a source
@@ -35,23 +37,37 @@ def create_new_transaction(
         description=description,
         account_id=account.id,
     )
+
+    budget_category = None
+    if budget_category_name:
+        budget_category: BudgetCategory = (
+            session.query(BudgetCategory)
+            .filter(
+                BudgetCategory.name == budget_category_name.upper(),
+                BudgetCategory.is_active == True,
+            )
+            .first()
+        )
+
+        if budget_category:
+            budget_category.amount_in_cents -= amount_in_cents
+
     try:
         session.add(new_transaction)
         session.commit()
         print(
-            "Successfully created transaction of type "
-            + str(type)
-            + " and amount "
-            + str(amount_in_cents)
-            + "\n"
-            + description
+            f"Successfully created transaction of type {str(type)}  and amount {str(amount_in_cents)}\n {description}"
         )
+        if budget_category:
+            print(
+                f"Budget {budget_category.name} now {budget_category.amount_in_cents}"
+            )
+        else:
+            print("No budget adjusted.")
+
     except:
         print(
-            "Could not create transaction of type "
-            + str(type)
-            + " and amount "
-            + str(amount_in_cents)
+            f"Could not create transaction of type {str(type)} and amount {str(amount_in_cents)}"
         )
 
 
