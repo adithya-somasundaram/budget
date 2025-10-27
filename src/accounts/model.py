@@ -12,12 +12,12 @@ timezone = pytz.timezone("America/Los_Angeles")
 
 
 class AccountType(enum.Enum):
-    CREDIT = 1
-    DEBIT = 2
-    CASH = 3
-    CHECK = 4
-    VENMO = 5
-    INVESTING = 6
+    CREDIT = "credit"
+    DEBIT = "debit"
+    CASH = "cash"
+    CHECK = "check"
+    VENMO = "venmo"
+    INVESTING = "investing"
 
 
 class Account(db.Model):
@@ -32,7 +32,7 @@ class Account(db.Model):
     __table_args__ = (
         # Unique only when is_active = 1 (i.e., true)
         Index(
-            "uq_active_name",
+            "uq_active_account_name",
             "name",
             unique=True,
             sqlite_where=text("is_active = 1"),
