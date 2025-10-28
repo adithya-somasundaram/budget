@@ -56,17 +56,9 @@ def create_new_credit_payment(
             session, amount_in_cents, TransactionType.DEBIT, transaction_message
         )
         print(
-            "Successfully create credit payment for "
-            + account_name
-            + " and amount "
-            + str(amount_in_cents)
-            + "\n"
-            + description
+            f"Successfully create credit payment for {account_name} and amount {amount_in_cents}\n{description}"
         )
     except:
         print(
-            "Could not create credit payment for "
-            + account_name
-            + " and amount "
-            + str(amount_in_cents)
+            f"Could not create credit payment for {account_name} and amount {amount_in_cents}"
         )
