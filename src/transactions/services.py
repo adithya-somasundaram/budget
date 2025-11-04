@@ -1,5 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 
+import pytz
 from sqlalchemy.sql import func
 
 from src.accounts.model import Account
@@ -15,8 +16,19 @@ def create_new_transaction(
     description: str,
     account_name: str,
     budget_category_name: str = None,
+    date_of_transaction_str: str = None,
 ):
     """Creates a transaction of type type. By default, transactions are stored as negative."""
+
+    date_of_transaction = None
+    if not date_of_transaction_str:
+        pacific_timezone = pytz.timezone("America/Los_Angeles")
+        date_of_transaction = datetime.now(pacific_timezone).date()
+    else:
+        date_of_transaction = datetime.strptime(
+            date_of_transaction_str, "%Y-%m-%d"
+        ).date()
+
     # Credit transactions require a source
     if type == TransactionType.CREDIT and not account_name:
         print("Need to input credit account for credit transaction!")
@@ -37,6 +49,7 @@ def create_new_transaction(
         type=type,
         description=description,
         account_id=account.id,
+        date_of_transaction=date_of_transaction,
     )
 
     budget_category = None
@@ -76,7 +89,7 @@ def get_all_transactions(session, from_date: date):
     """Gets and groups all transactions by date. Prints each days transactions along with summary from that date"""
     transaction_groups = (
         session.query(
-            func.DATE(Transaction.created_at),
+            Transaction.date_of_transaction,
             func.group_concat(
                 Transaction.type.op("||")("/")
                 .op("||")(Transaction.amount_in_cents)
@@ -84,8 +97,8 @@ def get_all_transactions(session, from_date: date):
                 .op("||")(Transaction.description)
             ).label("transactions"),
         )
-        .filter(func.DATE(Transaction.created_at) >= from_date)
-        .group_by(func.DATE(Transaction.created_at))
+        .filter(Transaction.date_of_transaction >= from_date)
+        .group_by(Transaction.date_of_transaction)
     ).all()
 
     for group in transaction_groups:
