@@ -44,6 +44,8 @@ def create_new_transaction(
         print(f"Account of name {account_name} not found. Payment not processed")
         return
 
+    account.value_in_cents -= amount_in_cents
+
     new_transaction = Transaction(
         amount_in_cents=-amount_in_cents,
         type=type,
@@ -111,3 +113,64 @@ def get_all_transactions(session, from_date: date):
             print("{0} \t{1:10} \t{2}".format(t_type, amount_str, t_description))
 
         print(f"\nTotals on {day}")
+
+
+def bulk_create_transactions(session):
+    """Bulk creates transactions. Transactions should be in the format of create_new_transaction input"""
+    print("Lets create some transactions! Enter 'quit' at any time to save and exit.")
+
+    date_of_transaction_str = input(
+        "Enter date of transaction in format YYYY-MM-DD, click 'Enter' to set to today: "
+    ).strip()
+
+    if date_of_transaction_str.lower() == "quit":
+        return
+
+    while True:
+        transaction_amount = input(
+            "Enter transaction amount in cents (e.g. 1050 for $10.50): "
+        ).strip()
+        if transaction_amount.lower() == "quit":
+            return
+
+        transaction_type = (
+            input("Enter transaction type (CREDIT, DEBIT, CASH, CHECK, VENMO): ")
+            .strip()
+            .upper()
+        )
+        if transaction_type.lower() == "quit":
+            return
+
+        transaction_description = input("Enter transaction description: ").strip()
+        if transaction_description.lower() == "quit":
+            return
+
+        transaction_account_name = input("Enter transaction account name: ").strip()
+        if transaction_account_name.lower() == "quit":
+            return
+
+        transaction_budget_category_name = input(
+            "Enter transaction budget category name (optional): "
+        ).strip()
+        if transaction_budget_category_name.lower() == "quit":
+            return
+
+        try:
+            create_new_transaction(
+                session,
+                amount_in_cents=int(transaction_amount),
+                type=TransactionType[transaction_type],
+                description=transaction_description,
+                account_name=transaction_account_name,
+                budget_category_name=(
+                    transaction_budget_category_name
+                    if transaction_budget_category_name != ""
+                    else None
+                ),
+                date_of_transaction_str=(
+                    date_of_transaction_str if date_of_transaction_str != "" else None
+                ),
+            )
+        except Exception as e:
+            print(f"Error creating new transaction: {str(e)}")
+            session.rollback()
