@@ -1,4 +1,4 @@
-from src.accounts.model import Account, AccountType
+from src.accounts.model import Account, AccountAdjustment, AccountType
 from src.helpers import cents_to_dollars_str
 
 
@@ -167,3 +167,25 @@ def get_summary(session):
         )
 
     return "{0:10}TOTAL: {1}".format(output, cents_to_dollars_str(grand_total))
+
+
+def adjust_account_value(
+    session, account_name: str, adjustment_amount_in_cents: int, reason: str = None
+):
+    account: Account = (
+        session.query(Account)
+        .filter(Account.name == account_name.upper(), Account.is_active == True)
+        .first()
+    )
+
+    if not account:
+        raise Exception(f"No active account found with name {account_name}!")
+
+    account.value_in_cents += adjustment_amount_in_cents
+    account_adjustment = AccountAdjustment(
+        account_id=account.id,
+        adjustment_amount_in_cents=adjustment_amount_in_cents,
+        adjustment_reason=reason,
+    )
+    session.add(account_adjustment)
+    session.commit()

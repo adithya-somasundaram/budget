@@ -1,14 +1,11 @@
 import enum
 from datetime import datetime
 
-import pytz
 from sqlalchemy import Enum, Index, event, text
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, String
 
 from app import db
-
-timezone = pytz.timezone("America/Los_Angeles")
 
 
 class AccountType(enum.Enum):
@@ -26,8 +23,8 @@ class Account(db.Model):
     type = Column(Enum(AccountType), nullable=False)
     name = Column(String, unique=True, nullable=False)
     is_active = Column(Boolean, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(timezone))
-    updated_at = Column(DateTime, default=datetime.now(timezone))
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, default=datetime.now())
 
     __table_args__ = (
         # Unique only when is_active = 1 (i.e., true)
@@ -40,6 +37,14 @@ class Account(db.Model):
     )
 
 
+class AccountAdjustment(db.Model):
+    id = Column(Integer, primary_key=True)
+    account_id = Column(Integer, ForeignKey("account.id"), nullable=False)
+    adjustment_amount_in_cents = Column(Integer, nullable=False)
+    adjustment_reason = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.now())
+
+
 class AccountRecords(db.Model):
     id = Column(Integer, primary_key=True)
     account_id = Column(Integer, ForeignKey("account.id"), nullable=False)
@@ -47,8 +52,7 @@ class AccountRecords(db.Model):
     type = Column(Enum(AccountType), nullable=False)
     name = Column(String, nullable=False)
     is_active = Column(Boolean, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(timezone))
-    updated_at = Column(DateTime, default=datetime.now(timezone))
+    created_at = Column(DateTime, default=datetime.now())
 
 
 @event.listens_for(Account, "after_insert")
