@@ -44,6 +44,8 @@ def create_new_transaction(
         print(f"Account of name {account_name} not found. Payment not processed")
         return
 
+    account.value_in_cents -= amount_in_cents
+
     new_transaction = Transaction(
         amount_in_cents=-amount_in_cents,
         type=type,
