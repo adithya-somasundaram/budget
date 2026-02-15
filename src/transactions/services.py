@@ -1,8 +1,8 @@
 from datetime import date, datetime
 
-import pytz
 from sqlalchemy.sql import func
 
+from helpers import pacific_timezone
 from src.accounts.model import Account
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str
@@ -22,7 +22,6 @@ def create_new_transaction(
 
     date_of_transaction = None
     if not date_of_transaction_str:
-        pacific_timezone = pytz.timezone("America/Los_Angeles")
         date_of_transaction = datetime.now(pacific_timezone).date()
     else:
         date_of_transaction = datetime.strptime(
