@@ -1,3 +1,6 @@
+import pytz
+
+
 def cents_to_dollars_str(value):
     """Default printing function. Input value in cents"""
     amount = value
@@ -35,3 +38,6 @@ def cents_to_dollars_str(value):
         + "."
         + cents
     )
+
+
+pacific_timezone = pytz.timezone("America/Los_Angeles")
