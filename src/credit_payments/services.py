@@ -50,10 +50,18 @@ def create_new_credit_payment(
 
         # Remove paid credit amount from credit bucket and deduct from debit
         create_new_transaction(
-            session, -amount_in_cents, TransactionType.CREDIT, transaction_message, type
+            session,
+            -amount_in_cents,
+            TransactionType.CREDIT,
+            transaction_message,
+            credit_account.name,
         )
         create_new_transaction(
-            session, amount_in_cents, TransactionType.DEBIT, transaction_message
+            session,
+            amount_in_cents,
+            TransactionType.DEBIT,
+            transaction_message,
+            credit_account.name,
         )
         print(
             f"Successfully create credit payment for {account_name} and amount {amount_in_cents}\n{description}"

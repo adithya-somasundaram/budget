@@ -12,7 +12,7 @@ from src.transactions.model import Transaction, TransactionType
 def create_new_transaction(
     session,
     amount_in_cents: int,
-    type: TransactionType,
+    transaction_type: TransactionType,
     description: str,
     account_name: str,
     budget_category_name: str = None,
@@ -30,7 +30,7 @@ def create_new_transaction(
         ).date()
 
     # Credit transactions require a source
-    if type == TransactionType.CREDIT and not account_name:
+    if transaction_type == TransactionType.CREDIT and not account_name:
         print("Need to input credit account for credit transaction!")
         return
 
@@ -44,11 +44,14 @@ def create_new_transaction(
         print(f"Account of name {account_name} not found. Payment not processed")
         return
 
-    account.value_in_cents -= amount_in_cents
+    if transaction_type == TransactionType.CREDIT:
+        account.value_in_cents += amount_in_cents
+    else:
+        account.value_in_cents -= amount_in_cents
 
     new_transaction = Transaction(
-        amount_in_cents=-amount_in_cents,
-        type=type,
+        amount_in_cents=amount_in_cents,
+        type=transaction_type,
         description=description,
         account_id=account.id,
         date_of_transaction=date_of_transaction,
@@ -72,7 +75,7 @@ def create_new_transaction(
         session.add(new_transaction)
         session.commit()
         print(
-            f"Successfully created transaction of type {str(type)}  and amount {str(amount_in_cents)}\n {description}"
+            f"Successfully created transaction of type {str(transaction_type)}  and amount {str(amount_in_cents)}\n {description}"
         )
         if budget_category:
             print(
@@ -83,7 +86,7 @@ def create_new_transaction(
 
     except:
         print(
-            f"Could not create transaction of type {str(type)} and amount {str(amount_in_cents)}"
+            f"Could not create transaction of type {str(transaction_type)} and amount {str(amount_in_cents)}"
         )
 
 
