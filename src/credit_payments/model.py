@@ -1,13 +1,10 @@
 from datetime import datetime
 
-import pytz
 from sqlalchemy import Date, ForeignKey
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import DateTime, Integer, String
 
 from app import db
-
-timezone = pytz.timezone("America/Los_Angeles")
 
 
 class CreditPayment(db.Model):
@@ -16,5 +13,4 @@ class CreditPayment(db.Model):
     credit_account_id = Column(Integer, ForeignKey("account.id"), nullable=False)
     date_of_transaction = Column(Date, nullable=False)
     description = Column(String(200))
-    created_at = Column(DateTime, default=datetime.now(timezone))
-    updated_at = Column(DateTime, default=datetime.now(timezone))
+    created_at = Column(DateTime, default=datetime.now())

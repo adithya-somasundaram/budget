@@ -1,14 +1,11 @@
 import enum
 from datetime import datetime
 
-import pytz
 from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import Date, DateTime, Integer, String
 
 from app import db
-
-timezone = pytz.timezone("America/Los_Angeles")
 
 
 class TransactionType(enum.Enum):
@@ -26,5 +23,4 @@ class Transaction(db.Model):
     account_id = Column(Integer, ForeignKey("account.id"), nullable=True)
     date_of_transaction = Column(Date, nullable=False)
     description = Column(String(200))
-    created_at = Column(DateTime, default=datetime.now(timezone))
-    updated_at = Column(DateTime, default=datetime.now(timezone))
+    created_at = Column(DateTime, default=datetime.now())

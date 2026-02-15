@@ -9,7 +9,7 @@ from src.helpers import cents_to_dollars_str
 from src.transactions.model import Transaction, TransactionType
 
 
-def create_new_transaction(
+def create_transaction(
     session,
     amount_in_cents: int,
     transaction_type: TransactionType,
@@ -118,7 +118,7 @@ def get_all_transactions(session, from_date: date):
 
 
 def bulk_create_transactions(session):
-    """Bulk creates transactions. Transactions should be in the format of create_new_transaction input"""
+    """Bulk creates transactions. Transactions should be in the format of create_transaction input"""
     print("Lets create some transactions! Enter 'quit' at any time to save and exit.")
 
     date_of_transaction_str = input(
@@ -158,7 +158,7 @@ def bulk_create_transactions(session):
             return
 
         try:
-            create_new_transaction(
+            create_transaction(
                 session,
                 amount_in_cents=int(transaction_amount),
                 type=TransactionType[transaction_type],
