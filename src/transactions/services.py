@@ -113,10 +113,7 @@ def get_all_transactions(session, from_date: date):
         print(f"\nTotals on {day}")
 
 
-def bulk_create_transactions(
-    session,
-    transactions: list[dict],
-):
+def bulk_create_transactions(session):
     """Bulk creates transactions. Transactions should be in the format of create_new_transaction input"""
     print("Lets create some transactions! Enter 'quit' at any time to save and exit.")
 
