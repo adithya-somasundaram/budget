@@ -4,7 +4,7 @@ from helpers import pacific_timezone
 from src.accounts.model import Account
 from src.credit_payments.model import CreditPayment
 from src.transactions.model import TransactionType
-from src.transactions.services import create_new_transaction
+from src.transactions.services import create_transaction
 
 
 def create_credit_payment(
@@ -59,14 +59,14 @@ def create_credit_payment(
         session.add(new_payment)
 
         # Remove paid credit amount from credit bucket and deduct from debit
-        create_new_transaction(
+        create_transaction(
             session,
             amount_in_cents,
             TransactionType.CREDIT,
             transaction_message,
             credit_account.name,
         )
-        create_new_transaction(
+        create_transaction(
             session,
             amount_in_cents,
             TransactionType.DEBIT,

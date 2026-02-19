@@ -1,5 +1,7 @@
 from src.accounts.model import Account, AccountType
 from src.helpers import cents_to_dollars_str
+from transactions.model import TransactionType
+from transactions.services import create_transaction
 
 
 def create_new_account(
@@ -167,3 +169,24 @@ def get_summary(session):
         )
 
     return "{0:10}TOTAL: {1}".format(output, cents_to_dollars_str(grand_total))
+
+
+def adjust_account_value(
+    session, account_name: str, adjustment_amount_in_cents: int, reason: str = None
+):
+    account: Account = (
+        session.query(Account)
+        .filter(Account.name == account_name.upper(), Account.is_active == True)
+        .first()
+    )
+
+    if not account:
+        raise Exception(f"No active account found with name {account_name}!")
+
+    create_transaction(
+        session,
+        -adjustment_amount_in_cents,
+        TransactionType.ADJUSTMENT,
+        f"Adjustment for account {account_name} for {adjustment_amount_in_cents} cents with reason: {reason}",
+        account_name,
+    )
