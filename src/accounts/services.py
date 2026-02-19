@@ -40,42 +40,6 @@ def create_new_account(
     return new_account.id
 
 
-# def update_account(
-#     session,
-#     name: str,
-#     value_in_cents: int = None,
-#     new_name: str = None,
-#     new_account_type: AccountType = None,
-# ):
-#     account: Account = (
-#         session.query(Account)
-#         .filter(
-#             Account.name == name.upper(),
-#             Account.is_active == True,
-#         )
-#         .first()
-#     )
-
-#     if not account:
-#         raise Exception(f"No active account found with name {name}!")
-
-#     if value_in_cents:
-#         account.value_in_cents = value_in_cents
-
-#     if new_name:
-#         account.name = new_name
-
-#     if new_account_type:
-#         account.type = new_account_type
-
-#     session.commit()
-
-#     print(
-#         f"Account {account.id} upated with name {new_name or ''}, type {new_account_type or ''}, and value {value_in_cents or ''}"
-#     )
-#     return account.id
-
-
 def deactivate_account(
     session,
     name: str,

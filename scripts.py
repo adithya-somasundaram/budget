@@ -5,3 +5,4 @@ from src.credit_payments.services import *
 from src.transactions.services import *
 
 app.app_context().push()
+db.create_all()
