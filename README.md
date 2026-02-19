@@ -17,7 +17,14 @@ Getting started:
 
 To install all dependencies:
 
+```
+pip install requirements.txt
+```
+
 To start the application in a terminal shell run:
+
+```
 python -i scripts.py
+```
 
 This will create the DB if its your first time running, and import the following service functions for use:
