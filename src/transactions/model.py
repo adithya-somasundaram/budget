@@ -14,6 +14,7 @@ class TransactionType(enum.Enum):
     CASH = 3
     CHECK = 4
     VENMO = 5
+    ADJUSTMENT = 6
 
 
 class Transaction(db.Model):

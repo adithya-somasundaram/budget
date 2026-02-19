@@ -37,14 +37,6 @@ class Account(db.Model):
     )
 
 
-class AccountAdjustment(db.Model):
-    id = Column(Integer, primary_key=True)
-    account_id = Column(Integer, ForeignKey("account.id"), nullable=False)
-    adjustment_amount_in_cents = Column(Integer, nullable=False)
-    adjustment_reason = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now())
-
-
 class AccountRecords(db.Model):
     id = Column(Integer, primary_key=True)
     account_id = Column(Integer, ForeignKey("account.id"), nullable=False)

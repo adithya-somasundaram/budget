@@ -1,5 +1,7 @@
-from src.accounts.model import Account, AccountAdjustment, AccountType
+from src.accounts.model import Account, AccountType
 from src.helpers import cents_to_dollars_str
+from transactions.model import TransactionType
+from transactions.services import create_transaction
 
 
 def create_new_account(
@@ -181,11 +183,10 @@ def adjust_account_value(
     if not account:
         raise Exception(f"No active account found with name {account_name}!")
 
-    account.value_in_cents += adjustment_amount_in_cents
-    account_adjustment = AccountAdjustment(
-        account_id=account.id,
-        adjustment_amount_in_cents=adjustment_amount_in_cents,
-        adjustment_reason=reason,
+    create_transaction(
+        session,
+        -adjustment_amount_in_cents,
+        TransactionType.ADJUSTMENT,
+        f"Adjustment for account {account_name} for {adjustment_amount_in_cents} cents with reason: {reason}",
+        account_name,
     )
-    session.add(account_adjustment)
-    session.commit()
