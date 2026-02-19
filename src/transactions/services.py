@@ -2,10 +2,9 @@ from datetime import date, datetime
 
 from sqlalchemy.sql import func
 
-from helpers import pacific_timezone
 from src.accounts.model import Account
 from src.budget_categories.model import BudgetCategory
-from src.helpers import cents_to_dollars_str
+from src.helpers import cents_to_dollars_str, pacific_timezone
 from src.transactions.model import Transaction, TransactionType
 
 
@@ -49,7 +48,7 @@ def create_transaction(
         account.value_in_cents -= amount_in_cents
 
     new_transaction = Transaction(
-        amount_in_cents=amount_in_cents,
+        amount_in_cents=-amount_in_cents,
         type=transaction_type,
         description=description,
         account_id=account.id,
@@ -74,7 +73,7 @@ def create_transaction(
         session.add(new_transaction)
         session.commit()
         print(
-            f"Successfully created transaction of type {str(transaction_type)}  and amount {str(amount_in_cents)}\n {description}"
+            f"Successfully created transaction of type {str(transaction_type)} and amount {str(amount_in_cents)}\n {description}"
         )
         if budget_category:
             print(
