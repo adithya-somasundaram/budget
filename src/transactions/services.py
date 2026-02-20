@@ -175,3 +175,59 @@ def bulk_create_transactions(session):
         except Exception as e:
             print(f"Error creating new transaction: {str(e)}")
             session.rollback()
+
+
+def create_transaction_input(session):
+    """Creates transactions via user input. Transactions should be in the format of create_transaction input"""
+
+    date_of_transaction_str = input(
+        "Enter date of transaction in format YYYY-MM-DD, click 'Enter' to set to today: "
+    ).strip()
+
+    transaction_amount = input(
+        "Enter transaction amount in cents (e.g. 1050 for $10.50): "
+    ).strip()
+    if transaction_amount.lower() == "quit":
+        return
+
+    transaction_type = (
+        input("Enter transaction type (CREDIT, DEBIT, CASH, CHECK, VENMO): ")
+        .strip()
+        .upper()
+    )
+    if transaction_type.lower() == "quit":
+        return
+
+    transaction_description = input("Enter transaction description: ").strip()
+    if transaction_description.lower() == "quit":
+        return
+
+    transaction_account_name = input("Enter transaction account name: ").strip()
+    if transaction_account_name.lower() == "quit":
+        return
+
+    transaction_budget_category_name = input(
+        "Enter transaction budget category name (optional): "
+    ).strip()
+    if transaction_budget_category_name.lower() == "quit":
+        return
+
+    try:
+        create_transaction(
+            session,
+            amount_in_cents=int(transaction_amount),
+            type=TransactionType[transaction_type],
+            description=transaction_description,
+            account_name=transaction_account_name,
+            budget_category_name=(
+                transaction_budget_category_name
+                if transaction_budget_category_name != ""
+                else None
+            ),
+            date_of_transaction_str=(
+                date_of_transaction_str if date_of_transaction_str != "" else None
+            ),
+        )
+    except Exception as e:
+        print(f"Error creating new transaction: {str(e)}")
+        session.rollback()
