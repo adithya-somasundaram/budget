@@ -153,7 +153,7 @@ def create_transaction_input_helper(session, date_of_transaction):
         return False
 
     transaction_type = (
-        input("Enter transaction type (CREDIT, DEBIT, CASH, CHECK, VENMO): ")
+        input("Enter transaction type (credit, debit, cash, check, venmo): ")
         .strip()
         .upper()
     )
