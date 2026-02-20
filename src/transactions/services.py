@@ -127,51 +127,71 @@ def bulk_create_transactions(session):
     if date_of_transaction_str.lower() == "quit":
         return
 
-    while True:
-        transaction_amount = input(
-            "Enter transaction amount in cents (e.g. 1050 for $10.50): "
-        ).strip()
-        if transaction_amount.lower() == "quit":
-            return
+    still_creating = True
 
-        transaction_type = (
-            input("Enter transaction type (CREDIT, DEBIT, CASH, CHECK, VENMO): ")
-            .strip()
-            .upper()
+    while still_creating:
+        still_creating = create_transaction_input_helper(
+            session, date_of_transaction_str
         )
-        if transaction_type.lower() == "quit":
-            return
 
-        transaction_description = input("Enter transaction description: ").strip()
-        if transaction_description.lower() == "quit":
-            return
 
-        transaction_account_name = input("Enter transaction account name: ").strip()
-        if transaction_account_name.lower() == "quit":
-            return
+def create_transaction_input(session):
+    """Creates transactions via user input. Transaction should be in the format of create_transaction input"""
 
-        transaction_budget_category_name = input(
-            "Enter transaction budget category name (optional): "
-        ).strip()
-        if transaction_budget_category_name.lower() == "quit":
-            return
+    date_of_transaction_str = input(
+        "Enter date of transaction in format YYYY-MM-DD, click 'Enter' to set to today: "
+    ).strip()
 
-        try:
-            create_transaction(
-                session,
-                amount_in_cents=int(transaction_amount),
-                type=TransactionType[transaction_type],
-                description=transaction_description,
-                account_name=transaction_account_name,
-                budget_category_name=(
-                    transaction_budget_category_name
-                    if transaction_budget_category_name != ""
-                    else None
-                ),
-                date_of_transaction_str=(
-                    date_of_transaction_str if date_of_transaction_str != "" else None
-                ),
-            )
-        except Exception as e:
-            print(f"Error creating new transaction: {str(e)}")
-            session.rollback()
+    create_transaction_input_helper(session, date_of_transaction_str)
+
+
+def create_transaction_input_helper(session, date_of_transaction):
+    transaction_amount = input(
+        "Enter transaction amount in cents (e.g. 1050 for $10.50): "
+    ).strip()
+    if transaction_amount.lower() == "quit":
+        return False
+
+    transaction_type = (
+        input("Enter transaction type (credit, debit, cash, check, venmo): ")
+        .strip()
+        .upper()
+    )
+    if transaction_type.lower() == "quit":
+        return False
+
+    transaction_description = input("Enter transaction description: ").strip()
+    if transaction_description.lower() == "quit":
+        return False
+
+    transaction_account_name = input("Enter transaction account name: ").strip()
+    if transaction_account_name.lower() == "quit":
+        return False
+
+    transaction_budget_category_name = input(
+        "Enter transaction budget category to deduct from (optional): "
+    ).strip()
+    if transaction_budget_category_name.lower() == "quit":
+        return False
+
+    try:
+        create_transaction(
+            session,
+            amount_in_cents=int(transaction_amount),
+            type=TransactionType[transaction_type],
+            description=transaction_description,
+            account_name=transaction_account_name,
+            budget_category_name=(
+                transaction_budget_category_name
+                if transaction_budget_category_name != ""
+                else None
+            ),
+            date_of_transaction_str=(
+                date_of_transaction if date_of_transaction != "" else None
+            ),
+        )
+        return True
+    except Exception as e:
+        print(f"Error creating new transaction: {str(e)}")
+        session.rollback()
+        return True
