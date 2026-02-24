@@ -105,7 +105,9 @@ def bulk_create_accounts(session):
         if account_type.lower() == "quit":
             return
 
-        value = input("Enter account value, click 'Enter' to set to 0: ").strip()
+        value = input(
+            "Enter account value in cents, click 'Enter' to set to 0: "
+        ).strip()
         if value.lower() == "quit":
             return
 
