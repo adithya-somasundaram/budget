@@ -110,6 +110,8 @@ def bulk_create_accounts(session):
         ).strip()
         if value.lower() == "quit":
             return
+        elif value == "":
+            value = 0
 
         try:
             create_new_account(session, name, AccountType(account_type), int(value))
