@@ -88,7 +88,9 @@ def create_transaction(
         )
 
 
-def get_all_transactions(session, from_date: date):
+def get_all_transactions(
+    session, from_date: date = datetime.now(pacific_timezone).date()
+):
     """Gets and groups all transactions by date. Prints each days transactions along with summary from that date"""
     transaction_groups = (
         session.query(
@@ -108,12 +110,14 @@ def get_all_transactions(session, from_date: date):
         day, transactions_for_date = group[0], group[1].split(",")
         print(f"\n{day}")
 
+        day_total_in_cents = 0
         for tr in transactions_for_date:
-            t_type, t_amount, t_description = tr.split("/")
-            amount_str = cents_to_dollars_str(int(t_amount))
+            t_type, t_amount_in_cents, t_description = tr.split("/")
+            amount_str = cents_to_dollars_str(abs(int(t_amount_in_cents)))
             print("{0} \t{1:10} \t{2}".format(t_type, amount_str, t_description))
+            day_total_in_cents += abs(int(t_amount_in_cents))
 
-        print(f"\nTotals on {day}")
+        print(f"Total spent on {day}: {cents_to_dollars_str(day_total_in_cents)}")
 
 
 def bulk_create_transactions(session):
@@ -146,6 +150,7 @@ def create_transaction_input(session):
 
 
 def create_transaction_input_helper(session, date_of_transaction):
+    """Prompts user for transaction parameters and creates single transaction"""
     transaction_amount = input(
         "Enter transaction amount in cents (e.g. 1050 for $10.50): "
     ).strip()
@@ -178,7 +183,7 @@ def create_transaction_input_helper(session, date_of_transaction):
         create_transaction(
             session,
             amount_in_cents=int(transaction_amount),
-            type=TransactionType[transaction_type],
+            transaction_type=TransactionType[transaction_type],
             description=transaction_description,
             account_name=transaction_account_name,
             budget_category_name=(
