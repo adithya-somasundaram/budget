@@ -150,6 +150,7 @@ def create_transaction_input(session):
 
 
 def create_transaction_input_helper(session, date_of_transaction):
+    """Prompts user for transaction parameters and creates single transaction"""
     transaction_amount = input(
         "Enter transaction amount in cents (e.g. 1050 for $10.50): "
     ).strip()
