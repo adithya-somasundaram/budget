@@ -1,3 +1,5 @@
+from sqlalchemy import case
+
 from src.accounts.model import Account, AccountType
 from src.helpers import cents_to_dollars_str
 from src.transactions.model import TransactionType
@@ -123,7 +125,12 @@ def bulk_create_accounts(session):
 def get_summary(session):
     """Sums and returns all accounts. Also calculates total net value."""
     accounts: list[Account] = (
-        session.query(Account).filter(Account.is_active == True).all()
+        session.query(Account.name, Account.value_in_cents, Account.type)
+        .filter(Account.is_active == True)
+        .order_by(
+            case((Account.type == AccountType.CREDIT, 1), else_=0), Account.created_at
+        )
+        .all()
     )
     output = ""
     grand_total = 0
@@ -135,9 +142,10 @@ def get_summary(session):
             grand_total -= account.value_in_cents
         else:
             grand_total += account.value_in_cents
-        output += f"{account.name:<{max_len}} : {cents_to_dollars_str(account.value_in_cents)}\n"
+        output += f"{account.name:<{max_len}} : {'-' if account.type == AccountType.CREDIT else ''}{cents_to_dollars_str(account.value_in_cents)}\n"
 
-    return "{0:10}TOTAL: {1}".format(output, cents_to_dollars_str(grand_total))
+    output += f"{'TOTAL':<{max_len}} : {cents_to_dollars_str(grand_total)}"
+    return output
 
 
 def adjust_account_value(
