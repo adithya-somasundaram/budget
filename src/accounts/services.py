@@ -122,7 +122,7 @@ def bulk_create_accounts(session):
             session.rollback()
 
 
-def get_summary(session):
+def print_summary(session):
     """Sums and returns all accounts. Also calculates total net value."""
     accounts: list[Account] = (
         session.query(Account.name, Account.value_in_cents, Account.type)
@@ -145,7 +145,7 @@ def get_summary(session):
         output += f"{account.name:<{max_account_name_len}} : {'-' if account.type == AccountType.CREDIT else ''}{cents_to_dollars_str(account.value_in_cents)}\n"
 
     output += f"{'TOTAL':<{max_account_name_len}} : {cents_to_dollars_str(grand_total)}"
-    return output
+    print(output)
 
 
 def adjust_account_value(
