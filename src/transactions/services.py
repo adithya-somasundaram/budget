@@ -3,7 +3,6 @@ from datetime import date, datetime
 from sqlalchemy.sql import func
 
 from src.accounts.model import Account
-from src.accounts.services import get_all_accounts_mapping
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str, pacific_timezone
 from src.transactions.model import Transaction, TransactionType
@@ -125,6 +124,8 @@ def get_all_transactions(
 
 def bulk_create_transactions(session):
     """Bulk creates transactions. Transactions should be in the format of create_transaction input"""
+    from src.accounts.services import get_all_accounts_mapping
+
     print("Lets create some transactions! Enter 'quit' at any time to save and exit.")
 
     date_of_transaction_str = input(
@@ -137,9 +138,11 @@ def bulk_create_transactions(session):
     still_creating = True
 
     account_mapping = get_all_accounts_mapping(session)
-    account_input_prompt = f"Enter transaction account name: "
+    account_input_prompt = f"Enter transaction account number: "
     for i, account_name in account_mapping.items():
         account_input_prompt += f"\n({i}) {account_name}"
+        print(account_input_prompt)
+    account_input_prompt += "\n"
 
     while still_creating:
         still_creating = create_transaction_input_helper(
@@ -149,15 +152,17 @@ def bulk_create_transactions(session):
 
 def create_transaction_input(session):
     """Creates transactions via user input. Transaction should be in the format of create_transaction input"""
+    from src.accounts.services import get_all_accounts_mapping
 
     date_of_transaction_str = input(
         "Enter date of transaction in format YYYY-MM-DD, click 'Enter' to set to today: "
     ).strip()
 
     account_mapping = get_all_accounts_mapping(session)
-    account_input_prompt = f"Enter transaction account name: "
+    account_input_prompt = f"Enter transaction account number: "
     for i, account_name in account_mapping.items():
         account_input_prompt += f"\n({i}) {account_name}"
+    account_input_prompt += "\n"
 
     create_transaction_input_helper(
         session, date_of_transaction_str, account_mapping, account_input_prompt
@@ -177,10 +182,12 @@ def create_transaction_input_helper(
     if transaction_amount.lower() == "quit":
         return False
 
-    transaction_account_name = input(account_input_prompt).strip()
-    if transaction_account_name.lower() == "quit":
+    transaction_account_number = input(account_input_prompt).strip()
+    if transaction_account_number.lower() == "quit":
         return False
-    transaction_account_name = account_mapping.get(int(transaction_account_name), None)
+    transaction_account_name = account_mapping.get(
+        int(transaction_account_number), None
+    )
 
     transaction_type = input(TRANSACTION_TYPE_INPUT_PROMPT).strip().upper()
     if transaction_type.lower() == "quit":
@@ -200,7 +207,7 @@ def create_transaction_input_helper(
         create_transaction(
             session,
             amount_in_cents=int(transaction_amount),
-            transaction_type=TransactionType[transaction_type],
+            transaction_type=TransactionType(int(transaction_type)),
             description=transaction_description,
             account_name=transaction_account_name,
             budget_category_name=(
