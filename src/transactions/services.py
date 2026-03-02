@@ -125,6 +125,7 @@ def get_all_transactions(
 def bulk_create_transactions(session):
     """Bulk creates transactions. Transactions should be in the format of create_transaction input"""
     from src.accounts.services import get_all_accounts_mapping
+    from src.budget_categories.services import get_budget_category_mapping
 
     print("Lets create some transactions! Enter 'quit' at any time to save and exit.")
 
@@ -142,15 +143,28 @@ def bulk_create_transactions(session):
     for i, account_name in account_mapping.items():
         account_input_prompt += f"\n({i}) {account_name}"
 
+    budget_category_mapping = get_budget_category_mapping(session)
+    budget_category_input_prompt = (
+        f"Enter transaction budget category number, click 'Enter' to skip: "
+    )
+    for i, budget_category_name in budget_category_mapping.items():
+        budget_category_input_prompt += f"\n({i}) {budget_category_name}"
+
     while still_creating:
         still_creating = create_transaction_input_helper(
-            session, date_of_transaction_str, account_mapping, account_input_prompt
+            session,
+            date_of_transaction_str,
+            account_mapping,
+            account_input_prompt,
+            budget_category_mapping,
+            budget_category_input_prompt,
         )
 
 
 def create_transaction_input(session):
     """Creates transactions via user input. Transaction should be in the format of create_transaction input"""
     from src.accounts.services import get_all_accounts_mapping
+    from src.budget_categories.services import get_budget_category_mapping
 
     date_of_transaction_str = input(
         "Enter date of transaction in format YYYY-MM-DD, click 'Enter' to set to today: "
@@ -161,8 +175,20 @@ def create_transaction_input(session):
     for i, account_name in account_mapping.items():
         account_input_prompt += f"\n({i}) {account_name}"
 
+    budget_category_mapping = get_budget_category_mapping(session)
+    budget_category_input_prompt = (
+        f"Enter transaction budget category number, click 'Enter' to skip: "
+    )
+    for i, budget_category_name in budget_category_mapping.items():
+        budget_category_input_prompt += f"\n({i}) {budget_category_name}"
+
     create_transaction_input_helper(
-        session, date_of_transaction_str, account_mapping, account_input_prompt
+        session,
+        date_of_transaction_str,
+        account_mapping,
+        account_input_prompt,
+        budget_category_mapping,
+        budget_category_input_prompt,
     )
 
 
@@ -171,6 +197,8 @@ def create_transaction_input_helper(
     date_of_transaction,
     account_mapping: dict[int, str],
     account_input_prompt: str,
+    budget_category_mapping: dict[int, str],
+    budget_category_input_prompt: str,
 ):
     """Prompts user for transaction parameters and creates single transaction"""
 
@@ -201,11 +229,15 @@ def create_transaction_input_helper(
         return False
 
     # Get transaction budget category if budgets exist, can be blank
-    transaction_budget_category_name = input(
-        "Enter transaction budget category to deduct from (optional): "
-    ).strip()
-    if transaction_budget_category_name.lower() == "quit":
-        return False
+    transaction_budget_category_name = None
+    if len(budget_category_mapping.values()):
+        print(budget_category_input_prompt)
+        transaction_budget_category_name = input().strip()
+        if transaction_budget_category_name.lower() == "quit":
+            return False
+        transaction_budget_category_name = budget_category_mapping.get(
+            int(transaction_budget_category_name), None
+        )
 
     try:
         create_transaction(
@@ -214,11 +246,7 @@ def create_transaction_input_helper(
             transaction_type=TransactionType(int(transaction_type)),
             description=transaction_description,
             account_name=transaction_account_name,
-            budget_category_name=(
-                transaction_budget_category_name
-                if transaction_budget_category_name != ""
-                else None
-            ),
+            budget_category_name=transaction_budget_category_name,
             date_of_transaction_str=(
                 date_of_transaction if date_of_transaction != "" else None
             ),
