@@ -141,7 +141,6 @@ def bulk_create_transactions(session):
     account_input_prompt = f"Enter transaction account number: "
     for i, account_name in account_mapping.items():
         account_input_prompt += f"\n({i}) {account_name}"
-    account_input_prompt += "\n"
 
     while still_creating:
         still_creating = create_transaction_input_helper(
@@ -161,7 +160,6 @@ def create_transaction_input(session):
     account_input_prompt = f"Enter transaction account number: "
     for i, account_name in account_mapping.items():
         account_input_prompt += f"\n({i}) {account_name}"
-    account_input_prompt += "\n"
 
     create_transaction_input_helper(
         session, date_of_transaction_str, account_mapping, account_input_prompt
@@ -180,8 +178,8 @@ def create_transaction_input_helper(
     ).strip()
     if transaction_amount.lower() == "quit":
         return False
-
-    transaction_account_number = input(account_input_prompt).strip()
+    print(account_input_prompt)
+    transaction_account_number = input().strip()
     if transaction_account_number.lower() == "quit":
         return False
     transaction_account_name = account_mapping.get(
