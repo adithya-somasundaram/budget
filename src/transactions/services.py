@@ -2,10 +2,13 @@ from datetime import date, datetime
 
 from sqlalchemy.sql import func
 
+from accounts.services import get_all_accounts_mapping
 from src.accounts.model import Account
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str, pacific_timezone
 from src.transactions.model import Transaction, TransactionType
+
+TRANSACTION_TYPE_INPUT_PROMPT = "Enter transaction type number:\n(1) Credit\n(2) Debit\n(3) Cash\n(4) Check\n(5) Venmo\n"
 
 
 def create_transaction(
@@ -133,9 +136,14 @@ def bulk_create_transactions(session):
 
     still_creating = True
 
+    account_mapping = get_all_accounts_mapping(session)
+    account_input_prompt = f"Enter transaction account name: "
+    for i, account_name in account_mapping.items():
+        account_input_prompt += f"\n({i}) {account_name}"
+
     while still_creating:
         still_creating = create_transaction_input_helper(
-            session, date_of_transaction_str
+            session, date_of_transaction_str, account_mapping, account_input_prompt
         )
 
 
@@ -146,10 +154,22 @@ def create_transaction_input(session):
         "Enter date of transaction in format YYYY-MM-DD, click 'Enter' to set to today: "
     ).strip()
 
-    create_transaction_input_helper(session, date_of_transaction_str)
+    account_mapping = get_all_accounts_mapping(session)
+    account_input_prompt = f"Enter transaction account name: "
+    for i, account_name in account_mapping.items():
+        account_input_prompt += f"\n({i}) {account_name}"
+
+    create_transaction_input_helper(
+        session, date_of_transaction_str, account_mapping, account_input_prompt
+    )
 
 
-def create_transaction_input_helper(session, date_of_transaction):
+def create_transaction_input_helper(
+    session,
+    date_of_transaction,
+    account_mapping: dict[int, str],
+    account_input_prompt: str,
+):
     """Prompts user for transaction parameters and creates single transaction"""
     transaction_amount = input(
         "Enter transaction amount in cents (e.g. 1050 for $10.50): "
@@ -157,20 +177,17 @@ def create_transaction_input_helper(session, date_of_transaction):
     if transaction_amount.lower() == "quit":
         return False
 
-    transaction_type = (
-        input("Enter transaction type (credit, debit, cash, check, venmo): ")
-        .strip()
-        .upper()
-    )
+    transaction_account_name = input(account_input_prompt).strip()
+    if transaction_account_name.lower() == "quit":
+        return False
+    transaction_account_name = account_mapping.get(int(transaction_account_name), None)
+
+    transaction_type = input(TRANSACTION_TYPE_INPUT_PROMPT).strip().upper()
     if transaction_type.lower() == "quit":
         return False
 
     transaction_description = input("Enter transaction description: ").strip()
     if transaction_description.lower() == "quit":
-        return False
-
-    transaction_account_name = input("Enter transaction account name: ").strip()
-    if transaction_account_name.lower() == "quit":
         return False
 
     transaction_budget_category_name = input(
