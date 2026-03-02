@@ -30,7 +30,7 @@ python -i scripts.py
 This will create the DB if its your first time running, and import all service functions for use. Some of the most useful:
 
 - `bulk_create_accounts`: Will prompt you to input account name, type (debit, credit, venmo, cash, check, investing), and value
-- `adjust_account`: Allows you to adjust the value of a given account. Records a transaction to track adjustment.
+- `adjust_account_value`: Allows you to adjust the value of a given account. Records a transaction to track adjustment.
 - `bulk_create_transactions` or `create_transaction_input`: Creates a transaction from an inputted account name. Also takes in transaction type (debit, credit, cash, check, venmo, adjustment). Can optionally deduct from a budget. Default transaction date is current date unless otherwise specified.
 - `print_summary`: Displays values of all accounts and sums net worth!
 - `create_budget_category` or `adjust_budget_category`: Allows for the creation or adjustment of a budget category
