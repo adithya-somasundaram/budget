@@ -141,7 +141,6 @@ def bulk_create_transactions(session):
     account_input_prompt = f"Enter transaction account number: "
     for i, account_name in account_mapping.items():
         account_input_prompt += f"\n({i}) {account_name}"
-        print(account_input_prompt)
     account_input_prompt += "\n"
 
     while still_creating:
