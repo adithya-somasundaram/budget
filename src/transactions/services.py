@@ -173,11 +173,15 @@ def create_transaction_input_helper(
     account_input_prompt: str,
 ):
     """Prompts user for transaction parameters and creates single transaction"""
+
+    # Get transaction amount in cents
     transaction_amount = input(
         "Enter transaction amount in cents (e.g. 1050 for $10.50): "
     ).strip()
     if transaction_amount.lower() == "quit":
         return False
+
+    # Get transaction account
     print(account_input_prompt)
     transaction_account_number = input().strip()
     if transaction_account_number.lower() == "quit":
@@ -186,14 +190,17 @@ def create_transaction_input_helper(
         int(transaction_account_number), None
     )
 
+    # Get transaction type
     transaction_type = input(TRANSACTION_TYPE_INPUT_PROMPT).strip().upper()
     if transaction_type.lower() == "quit":
         return False
 
+    # Get transaction description, can be blank
     transaction_description = input("Enter transaction description: ").strip()
     if transaction_description.lower() == "quit":
         return False
 
+    # Get transaction budget category if budgets exist, can be blank
     transaction_budget_category_name = input(
         "Enter transaction budget category to deduct from (optional): "
     ).strip()
