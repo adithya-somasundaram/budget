@@ -167,3 +167,23 @@ def adjust_account_value(
         f"Adjustment for account {account_name} for {adjustment_amount_in_cents} cents with reason: {reason}",
         account_name,
     )
+
+
+def get_all_active_accounts(session) -> list[Account]:
+    """Returns list of all active accounts with id and name."""
+    accounts: list[Account] = (
+        session.query(Account.id, Account.name)
+        .filter(Account.is_active == True)
+        .order_by(Account.created_at)
+        .all()
+    )
+    return accounts
+
+
+def get_all_accounts_mapping(session) -> dict[int, str]:
+    """Returns dict mapping account id to account name for all active accounts."""
+    accounts = get_all_active_accounts(session)
+    result = {}
+    for i in range(len(accounts)):
+        result[i] = accounts[i].name
+    return result
