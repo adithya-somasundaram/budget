@@ -6,6 +6,7 @@ from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, String
 
 from app import db
+from src.transactions.model import TransactionType
 
 
 class AccountType(enum.Enum):
@@ -25,6 +26,7 @@ class Account(db.Model):
     is_active = Column(Boolean, nullable=False)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, default=datetime.now())
+    transaction_type = Column(Enum(TransactionType), nullable=True)
 
     __table_args__ = (
         # Unique only when is_active = 1 (i.e., true)
