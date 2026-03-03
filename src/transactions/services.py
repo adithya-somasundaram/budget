@@ -3,6 +3,7 @@ from datetime import date, datetime
 from sqlalchemy.sql import func
 
 from src.accounts.model import Account
+from src.accounts.schemas import AccountNameType
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str, pacific_timezone
 from src.transactions.model import Transaction, TransactionType
@@ -140,8 +141,8 @@ def bulk_create_transactions(session):
 
     account_mapping = get_all_accounts_mapping(session)
     account_input_prompt = f"Enter transaction account number: "
-    for i, account_name in account_mapping.items():
-        account_input_prompt += f"\n({i}) {account_name}"
+    for i, account in account_mapping.items():
+        account_input_prompt += f"\n({i}) {account.name}"
 
     budget_category_mapping = get_budget_category_mapping(session)
     budget_category_input_prompt = (
@@ -172,8 +173,8 @@ def create_transaction_input(session):
 
     account_mapping = get_all_accounts_mapping(session)
     account_input_prompt = f"Enter transaction account number: "
-    for i, account_name in account_mapping.items():
-        account_input_prompt += f"\n({i}) {account_name}"
+    for i, account in account_mapping.items():
+        account_input_prompt += f"\n({i}) {account.name}"
 
     budget_category_mapping = get_budget_category_mapping(session)
     budget_category_input_prompt = (
@@ -195,7 +196,7 @@ def create_transaction_input(session):
 def create_transaction_input_helper(
     session,
     date_of_transaction,
-    account_mapping: dict[int, str],
+    account_mapping: dict[int, AccountNameType],
     account_input_prompt: str,
     budget_category_mapping: dict[int, str],
     budget_category_input_prompt: str,
@@ -208,20 +209,24 @@ def create_transaction_input_helper(
     ).strip()
     if transaction_amount.lower() == "quit":
         return False
+    transaction_amount = int(transaction_amount)
 
     # Get transaction account
     print(account_input_prompt)
     transaction_account_number = input().strip()
     if transaction_account_number.lower() == "quit":
         return False
-    transaction_account_name = account_mapping.get(
-        int(transaction_account_number), None
-    )
+    transaction_account = account_mapping.get(int(transaction_account_number), None)
 
     # Get transaction type
-    transaction_type = input(TRANSACTION_TYPE_INPUT_PROMPT).strip().upper()
-    if transaction_type.lower() == "quit":
-        return False
+    transaction_type = None
+    if transaction_account.transaction_type:
+        transaction_type = transaction_account.transaction_type
+    else:
+        transaction_type = input(TRANSACTION_TYPE_INPUT_PROMPT).strip().upper()
+        if transaction_type.lower() == "quit":
+            return False
+        transaction_type = TransactionType(int(transaction_type))
 
     # Get transaction description, can be blank
     transaction_description = input("Enter transaction description: ").strip()
@@ -242,10 +247,10 @@ def create_transaction_input_helper(
     try:
         create_transaction(
             session,
-            amount_in_cents=int(transaction_amount),
-            transaction_type=TransactionType(int(transaction_type)),
+            amount_in_cents=transaction_amount,
+            transaction_type=transaction_type,
             description=transaction_description,
-            account_name=transaction_account_name,
+            account_name=transaction_account.name,
             budget_category_name=transaction_budget_category_name,
             date_of_transaction_str=(
                 date_of_transaction if date_of_transaction != "" else None
