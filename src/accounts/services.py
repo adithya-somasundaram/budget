@@ -205,7 +205,7 @@ def get_all_active_accounts(session) -> list[Account]:
 
 
 def get_all_accounts_mapping(session) -> dict[int, AccountNameType]:
-    """Returns dict mapping account id to account name for all active accounts."""
+    """Returns dict mapping account id to account name and transaction type for all active accounts."""
     accounts = get_all_active_accounts(session)
     result = {}
     for i in range(len(accounts)):
