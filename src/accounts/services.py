@@ -1,13 +1,18 @@
 from sqlalchemy import case
 
 from src.accounts.model import Account, AccountType
+from src.accounts.schemas import AccountNameType
 from src.helpers import cents_to_dollars_str
 from src.transactions.model import TransactionType
 from src.transactions.services import create_transaction
 
 
 def create_new_account(
-    session, name: str, account_type: AccountType, value_in_cents: int = None
+    session,
+    name: str,
+    account_type: AccountType,
+    value_in_cents: int = None,
+    transaction_type: TransactionType = None,
 ):
     # dupe check
     dupe: Account = (
@@ -31,6 +36,7 @@ def create_new_account(
         type=account_type,
         value_in_cents=value_in_cents or 0,
         is_active=True,
+        transaction_type=transaction_type,
     )
 
     session.add(new_account)
@@ -115,8 +121,26 @@ def bulk_create_accounts(session):
         elif value == "":
             value = 0
 
+        print(
+            "Does the account have an exclusive transaction type (will be used in transactions):\n(1) Credit\n(2) Debit\n(3) Cash\n(4) Check\n(5) Venmo"
+        )
+        account_transaction_type_input = input().strip()
+        account_transaction_type = None
+        if account_transaction_type_input.lower() == "quit":
+            return
+        if account_transaction_type_input != "":
+            account_transaction_type = TransactionType(
+                int(account_transaction_type_input)
+            )
+
         try:
-            create_new_account(session, name, AccountType(account_type), int(value))
+            create_new_account(
+                session,
+                name,
+                AccountType(account_type),
+                int(value),
+                account_transaction_type,
+            )
         except Exception as e:
             print(f"Error creating new account: {str(e)}")
             session.rollback()
@@ -172,7 +196,7 @@ def adjust_account_value(
 def get_all_active_accounts(session) -> list[Account]:
     """Returns list of all active accounts with id and name."""
     accounts: list[Account] = (
-        session.query(Account.id, Account.name)
+        session.query(Account.id, Account.name, Account.transaction_type)
         .filter(Account.is_active == True)
         .order_by(Account.created_at)
         .all()
@@ -180,10 +204,12 @@ def get_all_active_accounts(session) -> list[Account]:
     return accounts
 
 
-def get_all_accounts_mapping(session) -> dict[int, str]:
-    """Returns dict mapping account id to account name for all active accounts."""
+def get_all_accounts_mapping(session) -> dict[int, AccountNameType]:
+    """Returns dict mapping account id to account name and transaction type for all active accounts."""
     accounts = get_all_active_accounts(session)
     result = {}
     for i in range(len(accounts)):
-        result[i] = accounts[i].name
+        result[i] = AccountNameType(
+            name=accounts[i].name, transaction_type=accounts[i].transaction_type
+        )
     return result
