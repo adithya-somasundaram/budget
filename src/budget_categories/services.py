@@ -89,7 +89,6 @@ def print_budget_summary(session):
     liquid_total = get_liquid_total(session)
     leftover = liquid_total - budget_total
 
-    output += f"{'TOTAL':<{label_len}} : {cents_to_dollars_str(budget_total)}\n"
     output += f"{'LEFTOVER':<{label_len}} : {cents_to_dollars_str(leftover)}"
     print(output)
 

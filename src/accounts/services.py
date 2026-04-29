@@ -146,7 +146,9 @@ def bulk_create_accounts(session):
             session.rollback()
 
 
-def print_summary(session):
+def print_summary(session, include_budget=True):
+    from src.budget_categories.services import print_budget_summary
+
     """Sums and returns all accounts. Also calculates total net value."""
     accounts: list[Account] = (
         session.query(Account.name, Account.value_in_cents, Account.type)
@@ -170,6 +172,10 @@ def print_summary(session):
 
     output += f"{'TOTAL':<{max_account_name_len}} : {cents_to_dollars_str(grand_total)}"
     print(output)
+
+    if include_budget:
+        print("\nBUDGET BREAKDOWN")
+        print_budget_summary(session)
 
 
 def get_liquid_total(session) -> int:
