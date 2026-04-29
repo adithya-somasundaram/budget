@@ -4,6 +4,7 @@ from src.accounts.services import (
     bulk_create_accounts,
     create_new_account,
     deactivate_account,
+    print_liquid_summary,
     print_summary,
     transfer,
 )

@@ -172,6 +172,32 @@ def print_summary(session):
     print(output)
 
 
+def print_liquid_summary(session):
+    """Sums and returns all non-investing accounts. Also calculates total liquid net value."""
+    accounts: list[Account] = (
+        session.query(Account.name, Account.value_in_cents, Account.type)
+        .filter(Account.is_active == True, Account.type != AccountType.INVESTING)
+        .order_by(
+            case((Account.type == AccountType.CREDIT, 1), else_=0), Account.created_at
+        )
+        .all()
+    )
+    output = ""
+    grand_total = 0
+
+    max_account_name_len = max(len(account.name) for account in accounts)
+
+    for account in accounts:
+        if account.type == AccountType.CREDIT:
+            grand_total -= account.value_in_cents
+        else:
+            grand_total += account.value_in_cents
+        output += f"{account.name:<{max_account_name_len}} : {'-' if account.type == AccountType.CREDIT else ''}{cents_to_dollars_str(account.value_in_cents)}\n"
+
+    output += f"{'TOTAL':<{max_account_name_len}} : {cents_to_dollars_str(grand_total)}"
+    print(output)
+
+
 def adjust_account_value(
     session, account_name: str, adjustment_amount_in_cents: int, reason: str = None
 ):
