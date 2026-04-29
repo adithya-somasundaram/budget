@@ -240,8 +240,10 @@ def create_transaction_input_helper(
         transaction_budget_category_name = input().strip()
         if transaction_budget_category_name.lower() == "quit":
             return False
-        transaction_budget_category_name = budget_category_mapping.get(
-            int(transaction_budget_category_name), None
+        transaction_budget_category_name = (
+            budget_category_mapping.get(int(transaction_budget_category_name), None)
+            if transaction_budget_category_name
+            else None
         )
 
     try:
