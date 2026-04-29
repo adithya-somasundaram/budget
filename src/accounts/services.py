@@ -69,6 +69,7 @@ def deactivate_account(
 
 
 def transfer(session, amount_in_cents, to_account: str, from_account: str):
+    """Transfers amount from one account to another. Both accounts must be active."""
     to_account_obj: Account = (
         session.query(Account)
         .filter(Account.name == to_account.upper(), Account.is_active == True)
