@@ -71,9 +71,7 @@ def deactivate_account(
 def transfer(session):
     """Transfers amount from one account to another. Both accounts must be active."""
     exit_keys = set(["quit", ""])
-    amount_in_cents = input(
-        "Enter account value in cents, click 'Enter' to set to 0: "
-    ).strip()
+    amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:
         return
     amount_in_cents = int(amount_in_cents)
@@ -83,11 +81,14 @@ def transfer(session):
     # User selects from account from list of active accounts
     print("Enter from account number: ")
     for i, account in account_mapping.items():
-        print(f"\n({i}) {account.name}")
-    from_account_name = input().strip()
-    if from_account_name.lower() in exit_keys:
+        print(f"({i}) {account.name}")
+    from_account_id = input().strip()
+    if from_account_id.lower() in exit_keys:
         return
-    from_account_name = account_mapping.get(int(from_account_name), None)
+    from_account = account_mapping.get(int(from_account_id), None)
+    if not from_account:
+        raise Exception("Invalid account selected!")
+    from_account_name = from_account.name
 
     # Fetch from account
     from_account_obj: Account = (
@@ -107,11 +108,14 @@ def transfer(session):
     # User selects to account from list of active accounts
     print("Enter to account number: ")
     for i, account in account_mapping.items():
-        print(f"\n({i}) {account.name}")
-    to_account_name = input().strip()
-    if to_account_name.lower() in exit_keys:
+        print(f"({i}) {account.name}")
+    to_account_id = input().strip()
+    if to_account_id.lower() in exit_keys:
         return
-    to_account_name = account_mapping.get(int(to_account_name), None)
+    to_account = account_mapping.get(int(to_account_id), None)
+    if not to_account:
+        raise Exception("Invalid account selected!")
+    to_account_name = to_account.name
 
     # Fetch to account
     to_account_obj: Account = (
