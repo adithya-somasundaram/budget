@@ -71,7 +71,7 @@ def deactivate_account(
 def transfer(session, amount_in_cents, to_account: str, from_account: str):
     to_account_obj: Account = (
         session.query(Account)
-        .filter(Account.name == from_account.upper(), Account.is_active == True)
+        .filter(Account.name == to_account.upper(), Account.is_active == True)
         .first()
     )
     if not to_account_obj:
