@@ -68,24 +68,52 @@ def deactivate_account(
     return account.id
 
 
-def transfer(session, amount_in_cents, to_account: str, from_account: str):
+def transfer(session):
     """Transfers amount from one account to another. Both accounts must be active."""
-    to_account_obj: Account = (
-        session.query(Account)
-        .filter(Account.name == to_account.upper(), Account.is_active == True)
-        .first()
-    )
-    if not to_account_obj:
-        raise Exception(f"No active account found with name {to_account}!")
+    exit_keys = set(["quit", ""])
+    amount_in_cents = input(
+        "Enter account value in cents, click 'Enter' to set to 0: "
+    ).strip()
+    if amount_in_cents.lower() in exit_keys:
+        return
+    amount_in_cents = int(amount_in_cents)
+
+    account_mapping = get_all_accounts_mapping(session)
+
+    print("Enter from account number: ")
+    for i, account in account_mapping.items():
+        print(f"\n({i}) {account.name}")
+
+    from_account_name = input().strip()
+    if from_account_name.lower() in exit_keys:
+        return
+    from_account_name = account_mapping.get(int(from_account_name), None)
 
     from_account_obj: Account = (
         session.query(Account)
-        .filter(Account.name == from_account.upper(), Account.is_active == True)
+        .filter(Account.name == from_account_name.upper(), Account.is_active == True)
         .first()
     )
 
     if not from_account_obj:
-        raise Exception(f"No active account found with name {from_account}!")
+        raise Exception(f"No active account found with name {from_account_name}!")
+
+    print("Enter to account number: ")
+    for i, account in account_mapping.items():
+        print(f"\n({i}) {account.name}")
+
+    to_account_name = input().strip()
+    if to_account_name.lower() in exit_keys:
+        return
+    to_account_name = account_mapping.get(int(to_account_name), None)
+
+    to_account_obj: Account = (
+        session.query(Account)
+        .filter(Account.name == to_account_name.upper(), Account.is_active == True)
+        .first()
+    )
+    if not to_account_obj:
+        raise Exception(f"No active account found with name {to_account_name}!")
 
     if amount_in_cents > from_account_obj.value_in_cents:
         raise Exception(
@@ -94,8 +122,11 @@ def transfer(session, amount_in_cents, to_account: str, from_account: str):
 
     to_account_obj.value_in_cents += amount_in_cents
     from_account_obj.value_in_cents -= amount_in_cents
-
     session.commit()
+
+    print(
+        f"Successfully transferred {amount_in_cents} from {from_account_name} to {to_account_name}!"
+    )
 
 
 def bulk_create_accounts(session):
