@@ -172,6 +172,22 @@ def print_summary(session):
     print(output)
 
 
+def get_liquid_total(session) -> int:
+    """Returns total liquid assets in cents, excluding investing accounts. Credit accounts are subtracted."""
+    accounts: list[Account] = (
+        session.query(Account.value_in_cents, Account.type)
+        .filter(Account.is_active == True, Account.type != AccountType.INVESTING)
+        .all()
+    )
+    total = 0
+    for account in accounts:
+        if account.type == AccountType.CREDIT:
+            total -= account.value_in_cents
+        else:
+            total += account.value_in_cents
+    return total
+
+
 def print_liquid_summary(session):
     """Sums and returns all non-investing accounts. Also calculates total liquid net value."""
     accounts: list[Account] = (

@@ -1,4 +1,6 @@
+from src.accounts.services import get_liquid_total
 from src.budget_categories.model import BudgetCategory
+from src.helpers import cents_to_dollars_str
 
 
 def create_budget_category(session, name: str, amount_in_cents=0):
@@ -63,6 +65,33 @@ def adjust_budget_category(
 
     budget_category.amount_in_cents += adjustment_amount_in_cents
     session.commit()
+
+
+def print_budget_summary(session):
+    """Prints all active budget categories and remaining liquid assets after budgets."""
+    categories = (
+        session.query(BudgetCategory.name, BudgetCategory.amount_in_cents)
+        .filter(BudgetCategory.is_active == True)
+        .order_by(BudgetCategory.name.asc())
+        .all()
+    )
+
+    output = ""
+    budget_total = 0
+
+    max_name_len = max(len(c.name) for c in categories)
+    label_len = max(max_name_len, len("LEFTOVER"))
+
+    for category in categories:
+        budget_total += category.amount_in_cents
+        output += f"{category.name:<{label_len}} : {cents_to_dollars_str(category.amount_in_cents)}\n"
+
+    liquid_total = get_liquid_total(session)
+    leftover = liquid_total - budget_total
+
+    output += f"{'TOTAL':<{label_len}} : {cents_to_dollars_str(budget_total)}\n"
+    output += f"{'LEFTOVER':<{label_len}} : {cents_to_dollars_str(leftover)}"
+    print(output)
 
 
 def get_all_active_budget_categories(session):
