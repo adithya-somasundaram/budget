@@ -211,23 +211,15 @@ def adjust_account_value(
     )
 
 
-def get_all_active_accounts(session) -> list[Account]:
-    """Returns list of all active accounts with id and name."""
-    accounts: list[Account] = (
-        session.query(Account.id, Account.name, Account.transaction_type)
-        .filter(Account.is_active == True)
-        .order_by(Account.created_at)
-        .all()
+def get_all_accounts_mapping(
+    session, account_type: AccountType = None
+) -> dict[int, Account]:
+    """Returns dict mapping an integer to and account. Good for user input."""
+    query = session.query(Account.id, Account.name, Account.transaction_type).filter(
+        Account.is_active == True
     )
-    return accounts
+    if account_type:
+        query = query.filter(Account.type == account_type)
+    accounts: list[Account] = query.order_by(Account.created_at).all()
 
-
-def get_all_accounts_mapping(session) -> dict[int, Account]:
-    """Returns dict mapping account id to account name and transaction type for all active accounts."""
-    accounts = get_all_active_accounts(session)
-    result = {}
-    for i in range(len(accounts)):
-        result[i] = Account(
-            name=accounts[i].name, transaction_type=accounts[i].transaction_type
-        )
-    return result
+    return {i: account for i, account in enumerate(accounts, 1)}
