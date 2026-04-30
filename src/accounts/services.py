@@ -211,7 +211,7 @@ def adjust_account_value(
     )
 
 
-def get_all_accounts_mapping(
+def _get_all_accounts_mapping(
     session, account_type: AccountType = None
 ) -> dict[int, Account]:
     """Returns dict mapping an integer to and account. Good for user input."""
