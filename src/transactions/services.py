@@ -3,7 +3,6 @@ from datetime import date, datetime
 from sqlalchemy.sql import func
 
 from src.accounts.model import Account
-from src.accounts.schemas import AccountNameType
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str, pacific_timezone
 from src.transactions.model import Transaction, TransactionType
@@ -196,7 +195,7 @@ def create_transaction_input(session):
 def create_transaction_input_helper(
     session,
     date_of_transaction,
-    account_mapping: dict[int, AccountNameType],
+    account_mapping: dict[int, Account],
     account_input_prompt: str,
     budget_category_mapping: dict[int, str],
     budget_category_input_prompt: str,

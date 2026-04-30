@@ -1,7 +1,6 @@
 from sqlalchemy import case
 
 from src.accounts.model import Account, AccountType
-from src.accounts.schemas import AccountNameType
 from src.helpers import cents_to_dollars_str
 from src.transactions.model import TransactionType
 from src.transactions.services import create_transaction
@@ -66,76 +65,6 @@ def deactivate_account(
 
     print(f"Account {account.id} {name} deactived!")
     return account.id
-
-
-def transfer(session):
-    """Transfers amount from one account to another. Both accounts must be active."""
-    exit_keys = set(["quit", ""])
-    amount_in_cents = input("Enter transfer amount in cents: ").strip()
-    if amount_in_cents.lower() in exit_keys:
-        return
-    amount_in_cents = int(amount_in_cents)
-
-    account_mapping = get_all_accounts_mapping(session)
-
-    # User selects from account from list of active accounts
-    print("Enter from account number: ")
-    for i, account in account_mapping.items():
-        print(f"({i}) {account.name}")
-    from_account_id = input().strip()
-    if from_account_id.lower() in exit_keys:
-        return
-    from_account = account_mapping.get(int(from_account_id), None)
-    if not from_account:
-        raise Exception("Invalid account selected!")
-    from_account_name = from_account.name
-
-    # Fetch from account
-    from_account_obj: Account = (
-        session.query(Account)
-        .filter(Account.name == from_account_name.upper(), Account.is_active == True)
-        .first()
-    )
-
-    # Validate from account and amount exceeds transfer amount
-    if not from_account_obj:
-        raise Exception(f"No active account found with name {from_account_name}!")
-    if amount_in_cents > from_account_obj.value_in_cents:
-        raise Exception(
-            f"{amount_in_cents} greater than accounts value {from_account_obj.value_in_cents}!"
-        )
-
-    # User selects to account from list of active accounts
-    print("Enter to account number: ")
-    for i, account in account_mapping.items():
-        print(f"({i}) {account.name}")
-    to_account_id = input().strip()
-    if to_account_id.lower() in exit_keys:
-        return
-    to_account = account_mapping.get(int(to_account_id), None)
-    if not to_account:
-        raise Exception("Invalid account selected!")
-    to_account_name = to_account.name
-
-    # Fetch to account
-    to_account_obj: Account = (
-        session.query(Account)
-        .filter(Account.name == to_account_name.upper(), Account.is_active == True)
-        .first()
-    )
-
-    # Validate to account
-    if not to_account_obj:
-        raise Exception(f"No active account found with name {to_account_name}!")
-
-    # Perform transfer
-    to_account_obj.value_in_cents += amount_in_cents
-    from_account_obj.value_in_cents -= amount_in_cents
-    session.commit()
-
-    print(
-        f"Successfully transferred {amount_in_cents} from {from_account_name} to {to_account_name}!"
-    )
 
 
 def bulk_create_accounts(session):
@@ -293,12 +222,12 @@ def get_all_active_accounts(session) -> list[Account]:
     return accounts
 
 
-def get_all_accounts_mapping(session) -> dict[int, AccountNameType]:
+def get_all_accounts_mapping(session) -> dict[int, Account]:
     """Returns dict mapping account id to account name and transaction type for all active accounts."""
     accounts = get_all_active_accounts(session)
     result = {}
     for i in range(len(accounts)):
-        result[i] = AccountNameType(
+        result[i] = Account(
             name=accounts[i].name, transaction_type=accounts[i].transaction_type
         )
     return result
