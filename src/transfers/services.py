@@ -2,10 +2,10 @@ from datetime import datetime
 
 from accounts.services import get_all_accounts_mapping
 from src.accounts.model import Account
-from src.credit_payments.model import CreditPayment
 from src.helpers import pacific_timezone
 from src.transactions.model import TransactionType
 from src.transactions.services import create_transaction
+from src.transfers.model import TransferLedger
 
 
 def transfer_input(session):
@@ -28,22 +28,6 @@ def transfer_input(session):
     from_account = account_mapping.get(int(from_account_id), None)
     if not from_account:
         raise Exception("Invalid account selected!")
-    from_account_name = from_account.name
-
-    # Fetch from account
-    from_account_obj: Account = (
-        session.query(Account)
-        .filter(Account.name == from_account_name.upper(), Account.is_active == True)
-        .first()
-    )
-
-    # Validate from account and amount exceeds transfer amount
-    if not from_account_obj:
-        raise Exception(f"No active account found with name {from_account_name}!")
-    if amount_in_cents > from_account_obj.value_in_cents:
-        raise Exception(
-            f"{amount_in_cents} greater than accounts value {from_account_obj.value_in_cents}!"
-        )
 
     # User selects to account from list of active accounts
     print("Enter to account number: ")
@@ -55,26 +39,26 @@ def transfer_input(session):
     to_account = account_mapping.get(int(to_account_id), None)
     if not to_account:
         raise Exception("Invalid account selected!")
-    to_account_name = to_account.name
 
-    # Fetch to account
-    to_account_obj: Account = (
-        session.query(Account)
-        .filter(Account.name == to_account_name.upper(), Account.is_active == True)
-        .first()
-    )
+    description = input(
+        "Enter description for transfer, click 'Enter' to skip: "
+    ).strip()
 
-    # Validate to account
-    if not to_account_obj:
-        raise Exception(f"No active account found with name {to_account_name}!")
-
-    # Perform transfer
-    to_account_obj.value_in_cents += amount_in_cents
-    from_account_obj.value_in_cents -= amount_in_cents
-    session.commit()
+    try:
+        _transfer(
+            session,
+            from_account.id,
+            to_account.id,
+            amount_in_cents,
+            False,
+            description if description != "" else None,
+        )
+    except Exception as e:
+        print(f"Transfer failed: {str(e)}")
+        return
 
     print(
-        f"Successfully transferred {amount_in_cents} from {from_account_name} to {to_account_name}!"
+        f"Successfully transferred {amount_in_cents} from {from_account.name} to {to_account.name}!"
     )
 
 
@@ -153,6 +137,63 @@ def create_credit_payment(
         )
 
 
-def _transfer(session):
+############ Helper functions below. Not meant to be used outside by user. ############
+
+
+def _transfer(
+    session,
+    from_account_id: int,
+    to_account_id: int,
+    amount_in_cents: int,
+    is_credit_payment: bool,
+    description: str = None,
+):
     """Helper function to transfer amount from one account to another. Both accounts must be active."""
-    pass
+    # Fetch from account
+    from_account_obj: Account = (
+        session.query(Account)
+        .filter(Account.id == from_account_id, Account.is_active == True)
+        .first()
+    )
+
+    # Validate from account and amount exceeds transfer amount
+    if not from_account_obj:
+        raise Exception(f"No active account FROM account found!")
+    if amount_in_cents > from_account_obj.value_in_cents:
+        raise Exception(
+            f"{amount_in_cents} greater than accounts value {from_account_obj.value_in_cents}!"
+        )
+
+    before_from_account_balance = from_account_obj.value_in_cents
+
+    # Fetch to account
+    to_account_obj: Account = (
+        session.query(Account)
+        .filter(Account.id == to_account_id, Account.is_active == True)
+        .first()
+    )
+
+    # Validate to account
+    if not to_account_obj:
+        raise Exception(f"No active account TO account found!")
+
+    before_to_account_balance = to_account_obj.value_in_cents
+
+    # Perform transfer
+    to_account_obj.value_in_cents += amount_in_cents
+    from_account_obj.value_in_cents -= amount_in_cents
+
+    ledger = TransferLedger(
+        from_account_id=from_account_id,
+        to_account_id=to_account_id,
+        amount_in_cents=amount_in_cents,
+        from_account_after_balance_in_cents=from_account_obj.value_in_cents,
+        to_account_after_balance_in_cents=to_account_obj.value_in_cents,
+        from_account_before_balance_in_cents=before_from_account_balance,
+        to_account_before_balance_in_cents=before_to_account_balance,
+        is_credit_payment=is_credit_payment,
+        description=description,
+        date_of_transaction=datetime.now(pacific_timezone).date(),
+    )
+    session.add(ledger)
+    session.commit()
