@@ -13,7 +13,7 @@ def create_transaction_input_helper(
     account_input_prompt: str,
     budget_category_mapping: dict[int, str],
     budget_category_input_prompt: str,
-):
+) -> bool:
     """Prompts user for transaction parameters and creates single transaction"""
 
     # Get transaction amount in cents
@@ -92,7 +92,7 @@ def create_transaction(
     account_name: str,
     budget_category_name: str = None,
     date_of_transaction_str: str = None,
-):
+) -> None:
     """Creates a transaction of type type. By default, transactions are stored as negative."""
 
     date_of_transaction = None

@@ -7,9 +7,9 @@ from src.transactions.model import Transaction
 from src.transactions.infra import create_transaction_input_helper
 
 
-def get_all_transactions(
+def view_all_transactions(
     session, from_date: date = datetime.now(pacific_timezone).date()
-):
+) -> None:
     """Gets and groups all transactions by date. Prints each days transactions along with summary from that date"""
     transaction_groups = (
         session.query(
@@ -39,7 +39,7 @@ def get_all_transactions(
         print(f"Total spent on {day}: {cents_to_dollars_str(day_total_in_cents)}")
 
 
-def bulk_create_transactions(session):
+def bulk_create_transactions(session) -> None:
     """Bulk creates transactions. Transactions should be in the format of create_transaction input"""
     from src.accounts.infra import get_all_accounts_mapping
     from src.budget_categories.infra import get_budget_category_mapping
@@ -80,7 +80,7 @@ def bulk_create_transactions(session):
         )
 
 
-def create_transaction_input(session):
+def create_transaction_input(session) -> None:
     """Creates transactions via user input. Transaction should be in the format of create_transaction input"""
     from src.accounts.infra import get_all_accounts_mapping
     from src.budget_categories.infra import get_budget_category_mapping

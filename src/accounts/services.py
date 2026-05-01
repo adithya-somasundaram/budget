@@ -12,7 +12,7 @@ def create_new_account(
     account_type: AccountType,
     value_in_cents: int = None,
     transaction_type: TransactionType = None,
-):
+) -> int:
     # dupe check
     dupe: Account = (
         session.query(Account)
@@ -50,7 +50,7 @@ def create_new_account(
 def deactivate_account(
     session,
     name: str,
-):
+) -> int:
     account: Account = (
         session.query(Account)
         .filter(Account.name == name.upper(), Account.is_active == True)
@@ -67,7 +67,7 @@ def deactivate_account(
     return account.id
 
 
-def bulk_create_accounts(session):
+def bulk_create_accounts(session) -> None:
     print(
         "Lets create some accounts! Enter 'quit' or 'exit' at any time to save and exit."
     )
@@ -118,7 +118,7 @@ def bulk_create_accounts(session):
             session.rollback()
 
 
-def print_summary(session, include_budget=True):
+def print_summary(session, include_budget=True) -> None:
     from src.budget_categories.services import print_budget_summary
 
     """Sums and returns all accounts. Also calculates total net value."""
@@ -150,7 +150,7 @@ def print_summary(session, include_budget=True):
         print_budget_summary(session)
 
 
-def print_liquid_summary(session):
+def print_liquid_summary(session) -> None:
     """Sums and returns all non-investing accounts. Also calculates total liquid net value."""
     accounts: list[Account] = (
         session.query(Account.name, Account.value_in_cents, Account.type)
@@ -178,7 +178,7 @@ def print_liquid_summary(session):
 
 def adjust_account_value(
     session, account_name: str, adjustment_amount_in_cents: int, reason: str = None
-):
+) -> None:
     account: Account = (
         session.query(Account)
         .filter(Account.name == account_name.upper(), Account.is_active == True)

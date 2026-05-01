@@ -3,7 +3,7 @@ from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str
 
 
-def create_budget_category(session, name: str, amount_in_cents=0):
+def create_budget_category(session, name: str, amount_in_cents=0) -> None:
     """Creates new budget category with given name and amount_in_cents. Name must be unique among active budget categories."""
     # check for dupes
     dupe_check = (
@@ -30,7 +30,7 @@ def create_budget_category(session, name: str, amount_in_cents=0):
         print(f"Error creating budget category: {str(e)}")
 
 
-def deactivate_budget_category(session, budget_category_name: str):
+def deactivate_budget_category(session, budget_category_name: str) -> None:
     """Deactivates budget category with given name."""
     budget_category = (
         session.query(BudgetCategory)
@@ -51,7 +51,7 @@ def deactivate_budget_category(session, budget_category_name: str):
 
 def adjust_budget_category(
     session, budget_category_name: str, adjustment_amount_in_cents: int
-):
+) -> None:
     """Adjusts budget category with given name by adjustment_amount_in_cents."""
     budget_category = (
         session.query(BudgetCategory)
@@ -70,7 +70,7 @@ def adjust_budget_category(
     session.commit()
 
 
-def print_budget_summary(session):
+def print_budget_summary(session) -> None:
     """Prints all active budget categories and remaining liquid assets after budgets."""
     categories = (
         session.query(BudgetCategory.name, BudgetCategory.amount_in_cents)
@@ -98,6 +98,3 @@ def print_budget_summary(session):
 
     output += f"{'LEFTOVER':<{label_len}} : {cents_to_dollars_str(leftover)}"
     print(output)
-
-
-############ Helper functions below. Not meant to be called by user. ############
