@@ -157,5 +157,5 @@ def adjust_account_value(
         -adjustment_amount_in_cents,
         TransactionType.ADJUSTMENT,
         f"Adjustment for account {account_name} for {-adjustment_amount_in_cents} cents with reason: {reason}",
-        account_name,
+        account.id,
     )
