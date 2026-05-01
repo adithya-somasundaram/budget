@@ -1,9 +1,10 @@
-from src.accounts.services import get_liquid_total
+from src.accounts.infra import get_liquid_total
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str
 
 
 def create_budget_category(session, name: str, amount_in_cents=0):
+    """Creates new budget category with given name and amount_in_cents. Name must be unique among active budget categories."""
     # check for dupes
     dupe_check = (
         session.query(BudgetCategory)
@@ -30,6 +31,7 @@ def create_budget_category(session, name: str, amount_in_cents=0):
 
 
 def deactivate_budget_category(session, budget_category_name: str):
+    """Deactivates budget category with given name."""
     budget_category = (
         session.query(BudgetCategory)
         .filter(
@@ -50,6 +52,7 @@ def deactivate_budget_category(session, budget_category_name: str):
 def adjust_budget_category(
     session, budget_category_name: str, adjustment_amount_in_cents: int
 ):
+    """Adjusts budget category with given name by adjustment_amount_in_cents."""
     budget_category = (
         session.query(BudgetCategory)
         .filter(
@@ -97,20 +100,4 @@ def print_budget_summary(session):
     print(output)
 
 
-def get_all_active_budget_categories(session):
-    """Returns list of all active budget category names"""
-    return (
-        session.query(BudgetCategory.id, BudgetCategory.name)
-        .filter(BudgetCategory.is_active == True)
-        .order_by(BudgetCategory.name.asc())
-        .all()
-    )
-
-
-def get_budget_category_mapping(session):
-    """Returns mapping of budget category name to budget category object for all active budget categories"""
-    active_budget_categories = get_all_active_budget_categories(session)
-    result = {}
-    for i in range(len(active_budget_categories)):
-        result[i] = active_budget_categories[i].name
-    return result
+############ Helper functions below. Not meant to be called by user. ############

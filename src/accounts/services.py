@@ -3,7 +3,7 @@ from sqlalchemy import case
 from src.accounts.model import Account, AccountType
 from src.helpers import cents_to_dollars_str
 from src.transactions.model import TransactionType
-from src.transactions.services import create_transaction
+from src.transactions.infra import create_transaction
 
 
 def create_new_account(
@@ -148,22 +148,6 @@ def print_summary(session, include_budget=True):
         print_budget_summary(session)
 
 
-def get_liquid_total(session) -> int:
-    """Returns total liquid assets in cents, excluding investing accounts. Credit accounts are subtracted."""
-    accounts: list[Account] = (
-        session.query(Account.value_in_cents, Account.type)
-        .filter(Account.is_active == True, Account.type != AccountType.INVESTING)
-        .all()
-    )
-    total = 0
-    for account in accounts:
-        if account.type == AccountType.CREDIT:
-            total -= account.value_in_cents
-        else:
-            total += account.value_in_cents
-    return total
-
-
 def print_liquid_summary(session):
     """Sums and returns all non-investing accounts. Also calculates total liquid net value."""
     accounts: list[Account] = (
@@ -209,17 +193,3 @@ def adjust_account_value(
         f"Adjustment for account {account_name} for {adjustment_amount_in_cents} cents with reason: {reason}",
         account_name,
     )
-
-
-def _get_all_accounts_mapping(
-    session, account_type: AccountType = None
-) -> dict[int, Account]:
-    """Returns dict mapping an integer to and account. Good for user input."""
-    query = session.query(Account.id, Account.name, Account.transaction_type).filter(
-        Account.is_active == True
-    )
-    if account_type:
-        query = query.filter(Account.type == account_type)
-    accounts: list[Account] = query.order_by(Account.created_at).all()
-
-    return {i: account for i, account in enumerate(accounts, 1)}
