@@ -1,7 +1,7 @@
 from sqlalchemy import case
 
 from src.accounts.model import Account, AccountType
-from src.helpers import cents_to_dollars_str
+from src.helpers import cents_to_dollars_str, exit_keys
 from src.transactions.model import TransactionType
 from src.transactions.infra import create_transaction
 
@@ -68,7 +68,9 @@ def deactivate_account(
 
 
 def bulk_create_accounts(session):
-    print("Lets create some accounts! Enter 'quit' at any time to save and exit.")
+    print(
+        "Lets create some accounts! Enter 'quit' or 'exit' at any time to save and exit."
+    )
 
     name = None
     account_type = None
@@ -76,17 +78,17 @@ def bulk_create_accounts(session):
 
     while True:
         name = input("Enter account name: ").strip()
-        if name.lower() == "quit":
+        if name.lower() in exit_keys:
             return
 
         account_type = input("Enter account type: ").strip().lower()
-        if account_type.lower() == "quit":
+        if account_type.lower() in exit_keys:
             return
 
         value = input(
             "Enter account value in cents, click 'Enter' to set to 0: "
         ).strip()
-        if value.lower() == "quit":
+        if value.lower() in exit_keys:
             return
         elif value == "":
             value = 0
@@ -96,7 +98,7 @@ def bulk_create_accounts(session):
         )
         account_transaction_type_input = input().strip()
         account_transaction_type = None
-        if account_transaction_type_input.lower() == "quit":
+        if account_transaction_type_input.lower() in exit_keys:
             return
         if account_transaction_type_input != "":
             account_transaction_type = TransactionType(

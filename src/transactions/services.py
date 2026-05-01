@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from sqlalchemy.sql import func
 
-from src.helpers import cents_to_dollars_str, pacific_timezone
+from src.helpers import cents_to_dollars_str, pacific_timezone, exit_keys
 from src.transactions.model import Transaction
 from src.transactions.infra import create_transaction_input_helper
 
@@ -44,13 +44,15 @@ def bulk_create_transactions(session):
     from src.accounts.infra import get_all_accounts_mapping
     from src.budget_categories.infra import get_budget_category_mapping
 
-    print("Lets create some transactions! Enter 'quit' at any time to save and exit.")
+    print(
+        "Lets create some transactions! Enter 'quit' or 'exit' at any time to save and exit."
+    )
 
     date_of_transaction_str = input(
         "Enter date of transaction in format YYYY-MM-DD, click 'Enter' to set to today: "
     ).strip()
 
-    if date_of_transaction_str.lower() == "quit":
+    if date_of_transaction_str.lower() in exit_keys:
         return
 
     still_creating = True

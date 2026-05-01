@@ -2,7 +2,7 @@ from datetime import datetime
 
 from src.accounts.model import Account
 from src.budget_categories.model import BudgetCategory
-from src.helpers import pacific_timezone
+from src.helpers import pacific_timezone, exit_keys
 from src.transactions.model import Transaction, TransactionType
 
 
@@ -20,14 +20,14 @@ def create_transaction_input_helper(
     transaction_amount = input(
         "Enter transaction amount in cents (e.g. 1050 for $10.50): "
     ).strip()
-    if transaction_amount.lower() == "quit":
+    if transaction_amount.lower() in exit_keys:
         return False
     transaction_amount = int(transaction_amount)
 
     # Get transaction account
     print(account_input_prompt)
     transaction_account_number = input().strip()
-    if transaction_account_number.lower() == "quit":
+    if transaction_account_number.lower() in exit_keys:
         return False
     transaction_account = account_mapping.get(int(transaction_account_number), None)
 
@@ -43,13 +43,13 @@ def create_transaction_input_helper(
             .strip()
             .upper()
         )
-        if transaction_type.lower() == "quit":
+        if transaction_type.lower() in exit_keys:
             return False
         transaction_type = TransactionType(int(transaction_type))
 
     # Get transaction description, can be blank
     transaction_description = input("Enter transaction description: ").strip()
-    if transaction_description.lower() == "quit":
+    if transaction_description.lower() in exit_keys:
         return False
 
     # Get transaction budget category if budgets exist, can be blank
@@ -57,7 +57,7 @@ def create_transaction_input_helper(
     if len(budget_category_mapping.values()):
         print(budget_category_input_prompt)
         transaction_budget_category_name = input().strip()
-        if transaction_budget_category_name.lower() == "quit":
+        if transaction_budget_category_name.lower() in exit_keys:
             return False
         transaction_budget_category_name = (
             budget_category_mapping.get(int(transaction_budget_category_name), None)
