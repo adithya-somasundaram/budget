@@ -1,9 +1,6 @@
-from datetime import datetime
-
-from src.accounts.services import _get_all_accounts_mapping
-from src.accounts.model import Account
-from src.helpers import pacific_timezone, exit_keys
-from src.transfers.model import TransferLedger
+from src.accounts.infra import get_all_accounts_mapping
+from src.helpers import exit_keys
+from src.transfers.infra import transfer
 
 
 def transfer_input(session):
@@ -13,7 +10,7 @@ def transfer_input(session):
         return
     amount_in_cents = int(amount_in_cents)
 
-    account_mapping = _get_all_accounts_mapping(session)
+    account_mapping = get_all_accounts_mapping(session)
 
     # User selects from account from list of active accounts
     print("Enter from account number: ")
@@ -42,7 +39,7 @@ def transfer_input(session):
     ).strip()
 
     try:
-        _transfer(
+        transfer(
             session,
             from_account.id,
             to_account.id,
@@ -66,8 +63,8 @@ def create_credit_payment(session):
         return
     amount_in_cents = int(amount_in_cents)
 
-    credit_account_mapping = _get_all_accounts_mapping(session, "CREDIT")
-    account_mapping = _get_all_accounts_mapping(session)
+    credit_account_mapping = get_all_accounts_mapping(session, "CREDIT")
+    account_mapping = get_all_accounts_mapping(session)
 
     # User selects from account from list of active accounts
     print("Enter credit account: ")
@@ -92,7 +89,7 @@ def create_credit_payment(session):
         raise Exception("Invalid account selected!")
 
     try:
-        _transfer(
+        transfer(
             session,
             from_account.id,
             to_account.id,
@@ -107,68 +104,3 @@ def create_credit_payment(session):
     print(
         f"Successfully paid {amount_in_cents} from {from_account.name} to {to_account.name}!"
     )
-
-
-############ Helper functions below. Not meant to be used outside by user. ############
-
-
-def _transfer(
-    session,
-    from_account_id: int,
-    to_account_id: int,
-    amount_in_cents: int,
-    is_credit_payment: bool,
-    description: str = None,
-):
-    """Helper function to transfer amount from one account to another. Both accounts must be active."""
-    # Fetch from account
-    from_account_obj: Account = (
-        session.query(Account)
-        .filter(Account.id == from_account_id, Account.is_active == True)
-        .first()
-    )
-
-    # Validate from account and amount exceeds transfer amount
-    if not from_account_obj:
-        raise Exception(f"No active account FROM account found!")
-    if amount_in_cents > from_account_obj.value_in_cents:
-        raise Exception(
-            f"{amount_in_cents} greater than accounts value {from_account_obj.value_in_cents}!"
-        )
-
-    before_from_account_balance = from_account_obj.value_in_cents
-
-    # Fetch to account
-    to_account_obj: Account = (
-        session.query(Account)
-        .filter(Account.id == to_account_id, Account.is_active == True)
-        .first()
-    )
-
-    # Validate to account
-    if not to_account_obj:
-        raise Exception(f"No active account TO account found!")
-
-    before_to_account_balance = to_account_obj.value_in_cents
-
-    # Perform transfer
-    if is_credit_payment:
-        to_account_obj.value_in_cents -= amount_in_cents
-    else:
-        to_account_obj.value_in_cents += amount_in_cents
-    from_account_obj.value_in_cents -= amount_in_cents
-
-    ledger = TransferLedger(
-        from_account_id=from_account_id,
-        to_account_id=to_account_id,
-        amount_in_cents=amount_in_cents,
-        from_account_after_balance_in_cents=from_account_obj.value_in_cents,
-        to_account_after_balance_in_cents=to_account_obj.value_in_cents,
-        from_account_before_balance_in_cents=before_from_account_balance,
-        to_account_before_balance_in_cents=before_to_account_balance,
-        is_credit_payment=is_credit_payment,
-        description=description,
-        date_of_transaction=datetime.now(pacific_timezone).date(),
-    )
-    session.add(ledger)
-    session.commit()
