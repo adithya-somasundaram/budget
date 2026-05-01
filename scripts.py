@@ -6,7 +6,6 @@ from src.accounts.services import (
     deactivate_account,
     print_liquid_summary,
     print_summary,
-    transfer,
 )
 from src.budget_categories.services import (
     adjust_budget_category,
@@ -14,7 +13,7 @@ from src.budget_categories.services import (
     deactivate_budget_category,
     print_budget_summary,
 )
-from src.credit_payments.services import create_credit_payment
+from src.transfers.services import create_credit_payment, transfer_input
 from src.transactions.services import bulk_create_transactions, create_transaction_input
 
 app.app_context().push()

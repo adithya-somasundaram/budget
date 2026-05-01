@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from accounts.services import _get_all_accounts_mapping
+from src.accounts.services import _get_all_accounts_mapping
 from src.accounts.model import Account
 from src.helpers import pacific_timezone, exit_keys
 from src.transfers.model import TransferLedger
 
 
 def transfer_input(session):
-    """Transfers amount from one account to another. Both accounts must be active."""
+    """Transfers amount from one account to another."""
     amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:
         return
@@ -47,7 +47,7 @@ def transfer_input(session):
             from_account.id,
             to_account.id,
             amount_in_cents,
-            False,
+            from_account.transaction_type == "CREDIT",
             description if description != "" else None,
         )
     except Exception as e:
@@ -60,7 +60,7 @@ def transfer_input(session):
 
 
 def create_credit_payment(session):
-
+    """Subtracts amount from credit account and another paying account."""
     amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:
         return
