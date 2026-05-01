@@ -1,6 +1,6 @@
 from src.accounts.infra import get_liquid_total
 from src.budget_categories.model import BudgetCategory
-from src.helpers import cents_to_dollars_str
+from src.helpers import cents_to_dollars_str, exit_keys
 
 
 def create_budget_category(session, name: str, amount_in_cents=0) -> None:
@@ -13,21 +13,42 @@ def create_budget_category(session, name: str, amount_in_cents=0) -> None:
     )
 
     if dupe_check:
-        print(f"Budget with name {name} exists with value {dupe_check.amount_in_cents}")
-        return
+        raise Exception(
+            f"Budget with name {name} exists with value {dupe_check.amount_in_cents}"
+        )
 
     budget_category = BudgetCategory(
         name=name.upper(), is_active=True, amount_in_cents=amount_in_cents
     )
 
-    try:
-        session.add(budget_category)
-        session.commit()
-        print(
-            f"Created budget category with name {name} and value {amount_in_cents} cents"
-        )
-    except Exception as e:
-        print(f"Error creating budget category: {str(e)}")
+    session.add(budget_category)
+    session.commit()
+    print(f"Created budget category with name {name} and value {amount_in_cents} cents")
+
+
+def bulk_create_budget_categories(session) -> None:
+    print(
+        "Lets create some budget categories! Enter 'quit' or 'exit' at any time to save and exit."
+    )
+
+    while True:
+        name = input("Enter budget category name: ").strip()
+        if name.lower() in exit_keys:
+            return
+
+        amount = input(
+            "Enter budget amount in cents, click 'Enter' to set to 0: "
+        ).strip()
+        if amount.lower() in exit_keys:
+            return
+        elif amount == "":
+            amount = 0
+
+        try:
+            create_budget_category(session, name, int(amount))
+        except Exception as e:
+            print(f"Error creating budget category: {str(e)}")
+            session.rollback()
 
 
 def deactivate_budget_category(session, budget_category_name: str) -> None:
