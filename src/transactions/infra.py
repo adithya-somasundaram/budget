@@ -14,7 +14,7 @@ def create_transaction_input_helper(
     budget_category_mapping: dict[int, str],
     budget_category_input_prompt: str,
 ) -> bool:
-    """Prompts user for transaction parameters and creates single transaction"""
+    """Prompts user for transaction parameters and creates single transaction. Returns false if user exits out of transaction creation, true if transaction created or error occurred."""
 
     # Get transaction amount in cents
     transaction_amount = input(
