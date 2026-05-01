@@ -1,4 +1,5 @@
 from src.accounts.model import Account, AccountType
+from src.transactions.model import TransactionType
 
 
 def get_all_accounts_mapping(
@@ -29,3 +30,45 @@ def get_liquid_total(session) -> int:
         else:
             total += account.value_in_cents
     return total
+
+
+def create_new_account(
+    session,
+    name: str,
+    account_type: AccountType,
+    value_in_cents: int = None,
+    transaction_type: TransactionType = None,
+) -> int:
+    """Creates a new account with given name and type. Returns new account id."""
+    # dupe check
+    dupe: Account = (
+        session.query(Account)
+        .filter(Account.name == name.upper(), Account.type == account_type)
+        .first()
+    )
+
+    if dupe and dupe.is_active:
+        raise Exception(
+            f"Duplicate account with type {account_type} and name {name}! Id: {dupe.id}"
+        )
+    elif dupe:
+        dupe.is_active = True
+        dupe.value_in_cents = value_in_cents or 0
+        session.commit()
+        return
+
+    new_account = Account(
+        name=name.upper(),
+        type=account_type,
+        value_in_cents=value_in_cents or 0,
+        is_active=True,
+        transaction_type=transaction_type,
+    )
+
+    session.add(new_account)
+    session.commit()
+
+    print(
+        f"New Account created with name {name} and type {account_type}: {new_account.id}"
+    )
+    return new_account.id
