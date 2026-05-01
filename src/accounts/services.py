@@ -13,6 +13,7 @@ def create_new_account(
     value_in_cents: int = None,
     transaction_type: TransactionType = None,
 ) -> int:
+    """Creates a new account with given name and type. Returns new account id."""
     # dupe check
     dupe: Account = (
         session.query(Account)
