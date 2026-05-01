@@ -3,7 +3,7 @@ from src.helpers import exit_keys
 from src.transfers.infra import transfer
 
 
-def transfer_input(session):
+def transfer_input(session) -> None:
     """Transfers amount from one account to another."""
     amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:
@@ -56,7 +56,7 @@ def transfer_input(session):
     )
 
 
-def create_credit_payment(session):
+def create_credit_payment(session) -> None:
     """Subtracts amount from credit account and another paying account."""
     amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:

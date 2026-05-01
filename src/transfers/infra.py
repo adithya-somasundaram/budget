@@ -12,7 +12,7 @@ def transfer(
     amount_in_cents: int,
     is_credit_payment: bool,
     description: str = None,
-):
+) -> None:
     """Helper function to transfer amount from one account to another. Both accounts must be active."""
     # Fetch from account
     from_account_obj: Account = (

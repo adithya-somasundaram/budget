@@ -1,56 +1,16 @@
 from sqlalchemy import case
 
+from src.accounts.infra import create_new_account
 from src.accounts.model import Account, AccountType
 from src.helpers import cents_to_dollars_str, exit_keys
 from src.transactions.model import TransactionType
 from src.transactions.infra import create_transaction
 
 
-def create_new_account(
-    session,
-    name: str,
-    account_type: AccountType,
-    value_in_cents: int = None,
-    transaction_type: TransactionType = None,
-):
-    # dupe check
-    dupe: Account = (
-        session.query(Account)
-        .filter(Account.name == name.upper(), Account.type == account_type)
-        .first()
-    )
-
-    if dupe and dupe.is_active:
-        raise Exception(
-            f"Duplicate account with type {account_type} and name {name}! Id: {dupe.id}"
-        )
-    elif dupe:
-        dupe.is_active = True
-        dupe.value_in_cents = value_in_cents or 0
-        session.commit()
-        return
-
-    new_account = Account(
-        name=name.upper(),
-        type=account_type,
-        value_in_cents=value_in_cents or 0,
-        is_active=True,
-        transaction_type=transaction_type,
-    )
-
-    session.add(new_account)
-    session.commit()
-
-    print(
-        f"New Account created with name {name} and type {account_type}: {new_account.id}"
-    )
-    return new_account.id
-
-
 def deactivate_account(
     session,
     name: str,
-):
+) -> int:
     account: Account = (
         session.query(Account)
         .filter(Account.name == name.upper(), Account.is_active == True)
@@ -67,7 +27,7 @@ def deactivate_account(
     return account.id
 
 
-def bulk_create_accounts(session):
+def bulk_create_accounts(session) -> None:
     print(
         "Lets create some accounts! Enter 'quit' or 'exit' at any time to save and exit."
     )
@@ -118,7 +78,7 @@ def bulk_create_accounts(session):
             session.rollback()
 
 
-def print_summary(session, include_budget=True):
+def print_summary(session, include_budget=True) -> None:
     from src.budget_categories.services import print_budget_summary
 
     """Sums and returns all accounts. Also calculates total net value."""
@@ -150,7 +110,7 @@ def print_summary(session, include_budget=True):
         print_budget_summary(session)
 
 
-def print_liquid_summary(session):
+def print_liquid_summary(session) -> None:
     """Sums and returns all non-investing accounts. Also calculates total liquid net value."""
     accounts: list[Account] = (
         session.query(Account.name, Account.value_in_cents, Account.type)
@@ -177,8 +137,8 @@ def print_liquid_summary(session):
 
 
 def adjust_account_value(
-    session, account_name: str, adjustment_amount_in_cents: int, reason: str = None
-):
+    session, account_name: str, new_value_in_cents: int, reason: str = None
+) -> None:
     account: Account = (
         session.query(Account)
         .filter(Account.name == account_name.upper(), Account.is_active == True)
@@ -188,10 +148,14 @@ def adjust_account_value(
     if not account:
         raise Exception(f"No active account found with name {account_name}!")
 
+    adjustment_amount_in_cents = new_value_in_cents - account.value_in_cents
+    if account.transaction_type == TransactionType.CREDIT:
+        adjustment_amount_in_cents = -adjustment_amount_in_cents
+
     create_transaction(
         session,
         -adjustment_amount_in_cents,
         TransactionType.ADJUSTMENT,
-        f"Adjustment for account {account_name} for {adjustment_amount_in_cents} cents with reason: {reason}",
+        f"Adjustment for account {account_name} for {-adjustment_amount_in_cents} cents with reason: {reason}",
         account_name,
     )
