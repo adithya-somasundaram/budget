@@ -49,9 +49,9 @@ def deactivate_budget_category(session, budget_category_name: str) -> None:
 
 
 def adjust_budget_category(
-    session, budget_category_name: str, adjustment_amount_in_cents: int
+    session, budget_category_name: str, new_amount_in_cents: int
 ) -> None:
-    """Adjusts budget category with given name by adjustment_amount_in_cents."""
+    """Adjusts budget category with given name to new_amount_in_cents."""
     budget_category = (
         session.query(BudgetCategory)
         .filter(
@@ -65,8 +65,11 @@ def adjust_budget_category(
         print(f"Could not find budget category with name {budget_category_name}")
         return
 
-    budget_category.amount_in_cents += adjustment_amount_in_cents
+    budget_category.amount_in_cents = new_amount_in_cents
     session.commit()
+    print(
+        f"Adjusted budget category {budget_category_name} to new amount {cents_to_dollars_str(new_amount_in_cents)}"
+    )
 
 
 def print_budget_summary(session) -> None:
