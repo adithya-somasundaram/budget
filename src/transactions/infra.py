@@ -30,6 +30,9 @@ def create_transaction_input_helper(
     if transaction_account_number.lower() in exit_keys:
         return False
     transaction_account = account_mapping.get(int(transaction_account_number), None)
+    if not transaction_account:
+        print("Invalid account selected!")
+        return True
 
     # Get transaction type
     transaction_type = None
@@ -71,7 +74,7 @@ def create_transaction_input_helper(
             amount_in_cents=transaction_amount,
             transaction_type=transaction_type,
             description=transaction_description,
-            account_name=transaction_account.name,
+            account_id=transaction_account.id,
             budget_category_name=transaction_budget_category_name,
             date_of_transaction_str=(
                 date_of_transaction if date_of_transaction != "" else None
@@ -89,7 +92,7 @@ def create_transaction(
     amount_in_cents: int,
     transaction_type: TransactionType,
     description: str,
-    account_name: str,
+    account_id: int,
     budget_category_name: str = None,
     date_of_transaction_str: str = None,
 ) -> None:
@@ -103,19 +106,14 @@ def create_transaction(
             date_of_transaction_str, "%Y-%m-%d"
         ).date()
 
-    # Credit transactions require a source
-    if transaction_type == TransactionType.CREDIT and not account_name:
-        print("Need to input credit account for credit transaction!")
-        return
-
     account: Account = (
         session.query(Account)
-        .filter(Account.name == account_name.upper(), Account.is_active == True)
+        .filter(Account.id == account_id, Account.is_active == True)
         .first()
     )
 
     if not account:
-        print(f"Account of name {account_name} not found. Payment not processed")
+        print(f"Account of id {account_id} not found. Payment not processed")
         return
 
     if transaction_type == TransactionType.CREDIT:
