@@ -76,6 +76,10 @@ def print_budget_summary(session):
         .all()
     )
 
+    if len(categories) == 0:
+        print("No active budget categories.")
+        return
+
     output = ""
     budget_total = 0
 

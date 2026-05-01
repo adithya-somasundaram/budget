@@ -3,7 +3,6 @@ from datetime import date, datetime
 from sqlalchemy.sql import func
 
 from src.accounts.model import Account
-from src.accounts.schemas import AccountNameType
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str, pacific_timezone
 from src.transactions.model import Transaction, TransactionType
@@ -125,7 +124,7 @@ def get_all_transactions(
 
 def bulk_create_transactions(session):
     """Bulk creates transactions. Transactions should be in the format of create_transaction input"""
-    from src.accounts.services import get_all_accounts_mapping
+    from src.accounts.services import _get_all_accounts_mapping
     from src.budget_categories.services import get_budget_category_mapping
 
     print("Lets create some transactions! Enter 'quit' at any time to save and exit.")
@@ -139,7 +138,7 @@ def bulk_create_transactions(session):
 
     still_creating = True
 
-    account_mapping = get_all_accounts_mapping(session)
+    account_mapping = _get_all_accounts_mapping(session)
     account_input_prompt = f"Enter transaction account number: "
     for i, account in account_mapping.items():
         account_input_prompt += f"\n({i}) {account.name}"
@@ -164,14 +163,14 @@ def bulk_create_transactions(session):
 
 def create_transaction_input(session):
     """Creates transactions via user input. Transaction should be in the format of create_transaction input"""
-    from src.accounts.services import get_all_accounts_mapping
+    from src.accounts.services import _get_all_accounts_mapping
     from src.budget_categories.services import get_budget_category_mapping
 
     date_of_transaction_str = input(
         "Enter date of transaction in format YYYY-MM-DD, click 'Enter' to set to today: "
     ).strip()
 
-    account_mapping = get_all_accounts_mapping(session)
+    account_mapping = _get_all_accounts_mapping(session)
     account_input_prompt = f"Enter transaction account number: "
     for i, account in account_mapping.items():
         account_input_prompt += f"\n({i}) {account.name}"
@@ -196,7 +195,7 @@ def create_transaction_input(session):
 def create_transaction_input_helper(
     session,
     date_of_transaction,
-    account_mapping: dict[int, AccountNameType],
+    account_mapping: dict[int, Account],
     account_input_prompt: str,
     budget_category_mapping: dict[int, str],
     budget_category_input_prompt: str,

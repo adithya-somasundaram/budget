@@ -41,3 +41,4 @@ def cents_to_dollars_str(value):
 
 
 pacific_timezone = pytz.timezone("America/Los_Angeles")
+exit_keys = set(["quit", "exit"])
