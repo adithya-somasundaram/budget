@@ -67,6 +67,9 @@ def adjust_budget_category(
 
     budget_category.amount_in_cents = new_amount_in_cents
     session.commit()
+    print(
+        f"Adjusted budget category {budget_category_name} to new amount {cents_to_dollars_str(new_amount_in_cents)}"
+    )
 
 
 def print_budget_summary(session) -> None:
