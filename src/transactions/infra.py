@@ -11,7 +11,7 @@ def create_transaction_input_helper(
     date_of_transaction,
     account_mapping: dict[int, Account],
     account_input_prompt: str,
-    budget_category_mapping: dict[int, str],
+    budget_category_mapping: dict[int, BudgetCategory],
     budget_category_input_prompt: str,
 ) -> bool:
     """Prompts user for transaction parameters and creates single transaction. Returns false if user exits out of transaction creation, true if transaction created or error occurred."""
@@ -56,15 +56,15 @@ def create_transaction_input_helper(
         return False
 
     # Get transaction budget category if budgets exist, can be blank
-    transaction_budget_category_name = None
+    transaction_budget_category = None
     if len(budget_category_mapping.values()):
         print(budget_category_input_prompt)
-        transaction_budget_category_name = input().strip()
-        if transaction_budget_category_name.lower() in exit_keys:
+        transaction_budget_category = input().strip()
+        if transaction_budget_category.lower() in exit_keys:
             return False
-        transaction_budget_category_name = (
-            budget_category_mapping.get(int(transaction_budget_category_name), None)
-            if transaction_budget_category_name
+        transaction_budget_category = (
+            budget_category_mapping.get(int(transaction_budget_category), None)
+            if transaction_budget_category != ""
             else None
         )
 
@@ -75,7 +75,9 @@ def create_transaction_input_helper(
             transaction_type=transaction_type,
             description=transaction_description,
             account_id=transaction_account.id,
-            budget_category_name=transaction_budget_category_name,
+            budget_category_id=(
+                transaction_budget_category.id if transaction_budget_category else None
+            ),
             date_of_transaction_str=(
                 date_of_transaction if date_of_transaction != "" else None
             ),
@@ -93,7 +95,7 @@ def create_transaction(
     transaction_type: TransactionType,
     description: str,
     account_id: int,
-    budget_category_name: str = None,
+    budget_category_id: int = None,
     date_of_transaction_str: str = None,
 ) -> None:
     """Creates a transaction of type type. By default, transactions are stored as negative."""
@@ -130,11 +132,11 @@ def create_transaction(
     )
 
     budget_category = None
-    if budget_category_name:
+    if budget_category_id:
         budget_category: BudgetCategory = (
             session.query(BudgetCategory)
             .filter(
-                BudgetCategory.name == budget_category_name.upper(),
+                BudgetCategory.id == budget_category_id,
                 BudgetCategory.is_active == True,
             )
             .first()
