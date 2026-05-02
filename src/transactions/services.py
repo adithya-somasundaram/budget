@@ -80,8 +80,9 @@ def bulk_create_transactions(session) -> None:
         )
 
 
+### Deprecated functions below, kept for reference, may be deleted in the future ###
 def create_transaction_input(session) -> None:
-    """Creates transactions via user input. Transaction should be in the format of create_transaction input"""
+    """Creates single transaction via user input. Transaction should be in the format of create_transaction input"""
     from src.accounts.infra import get_all_accounts_mapping
     from src.budget_categories.infra import get_budget_category_mapping
 
