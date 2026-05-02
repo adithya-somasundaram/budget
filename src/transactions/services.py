@@ -66,8 +66,8 @@ def bulk_create_transactions(session) -> None:
     budget_category_input_prompt = (
         f"Enter transaction budget category number, click 'Enter' to skip: "
     )
-    for i, budget_category_name in budget_category_mapping.items():
-        budget_category_input_prompt += f"\n({i}) {budget_category_name}"
+    for i, budget_category in budget_category_mapping.items():
+        budget_category_input_prompt += f"\n({i}) {budget_category.name}"
 
     while still_creating:
         still_creating = create_transaction_input_helper(
@@ -80,8 +80,9 @@ def bulk_create_transactions(session) -> None:
         )
 
 
+### Deprecated functions below, kept for reference, may be deleted in the future ###
 def create_transaction_input(session) -> None:
-    """Creates transactions via user input. Transaction should be in the format of create_transaction input"""
+    """Creates single transaction via user input. Transaction should be in the format of create_transaction input"""
     from src.accounts.infra import get_all_accounts_mapping
     from src.budget_categories.infra import get_budget_category_mapping
 
@@ -98,8 +99,8 @@ def create_transaction_input(session) -> None:
     budget_category_input_prompt = (
         f"Enter transaction budget category number, click 'Enter' to skip: "
     )
-    for i, budget_category_name in budget_category_mapping.items():
-        budget_category_input_prompt += f"\n({i}) {budget_category_name}"
+    for i, budget_category in budget_category_mapping.items():
+        budget_category_input_prompt += f"\n({i}) {budget_category.name}"
 
     create_transaction_input_helper(
         session,
