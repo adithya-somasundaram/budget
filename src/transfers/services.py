@@ -1,4 +1,5 @@
 from src.accounts.infra import get_all_accounts_mapping
+from src.accounts.model import AccountType
 from src.helpers import exit_keys
 from src.transfers.infra import transfer
 
@@ -44,7 +45,7 @@ def transfer_input(session) -> None:
             from_account.id,
             to_account.id,
             amount_in_cents,
-            from_account.transaction_type == "CREDIT",
+            from_account.type == AccountType.CREDIT,
             description if description != "" else None,
         )
     except Exception as e:
@@ -63,7 +64,7 @@ def create_credit_payment(session) -> None:
         return
     amount_in_cents = int(amount_in_cents)
 
-    credit_account_mapping = get_all_accounts_mapping(session, "CREDIT")
+    credit_account_mapping = get_all_accounts_mapping(session, AccountType.CREDIT)
     account_mapping = get_all_accounts_mapping(session)
 
     # User selects from account from list of active accounts
