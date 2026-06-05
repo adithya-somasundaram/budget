@@ -32,9 +32,9 @@ def view_all_transactions(
         day_total_in_cents = 0
         for tr in transactions_for_date:
             t_type, t_amount_in_cents, t_description = tr.split("/")
-            amount_str = cents_to_dollars_str(abs(int(t_amount_in_cents)))
+            amount_str = cents_to_dollars_str(int(t_amount_in_cents))
             print("{0} \t{1:10} \t{2}".format(t_type, amount_str, t_description))
-            day_total_in_cents += abs(int(t_amount_in_cents))
+            day_total_in_cents += int(t_amount_in_cents)
 
         print(f"Total spent on {day}: {cents_to_dollars_str(day_total_in_cents)}")
 
