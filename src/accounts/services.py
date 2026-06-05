@@ -3,7 +3,7 @@ from sqlalchemy import case
 from src.accounts.infra import create_new_account
 from src.accounts.model import Account, AccountType
 from src.helpers import cents_to_dollars_str, exit_keys
-from src.transactions.model import TransactionType
+from src.transactions.model import TransactionDirection, TransactionType
 from src.transactions.infra import create_transaction
 
 
@@ -149,13 +149,13 @@ def adjust_account_value(
         raise Exception(f"No active account found with name {account_name}!")
 
     adjustment_amount_in_cents = new_value_in_cents - account.value_in_cents
-    if account.transaction_type == TransactionType.CREDIT:
-        adjustment_amount_in_cents = -adjustment_amount_in_cents
+    direction = TransactionDirection.INCREMENT if adjustment_amount_in_cents > 0 else TransactionDirection.DECREMENT
 
     create_transaction(
         session,
-        -adjustment_amount_in_cents,
+        abs(adjustment_amount_in_cents),
         TransactionType.ADJUSTMENT,
-        f"Adjustment for account {account_name} for {-adjustment_amount_in_cents} cents with reason: {reason}",
+        f"Adjustment for account {account_name} for {adjustment_amount_in_cents} cents with reason: {reason}",
         account.id,
+        direction=direction,
     )

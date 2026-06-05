@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from src.accounts.model import Account
+from src.accounts.model import Account, AccountType
 from src.budget_categories.model import BudgetCategory
 from src.helpers import pacific_timezone, exit_keys
-from src.transactions.model import Transaction, TransactionType
+from src.transactions.model import Transaction, TransactionDirection, TransactionType
 
 
 def create_transaction_input_helper(
@@ -50,6 +50,16 @@ def create_transaction_input_helper(
             return False
         transaction_type = TransactionType(int(transaction_type))
 
+    # Get transaction direction
+    direction_input = input(
+        "Enter transaction direction:\n(1) Decrement (default)\n(2) Increment\n"
+    ).strip()
+    if direction_input.lower() in exit_keys:
+        return False
+    transaction_direction = (
+        TransactionDirection.INCREMENT if direction_input == "2" else TransactionDirection.DECREMENT
+    )
+
     # Get transaction description, can be blank
     transaction_description = input("Enter transaction description: ").strip()
     if transaction_description.lower() in exit_keys:
@@ -73,6 +83,7 @@ def create_transaction_input_helper(
             session,
             amount_in_cents=transaction_amount,
             transaction_type=transaction_type,
+            direction=transaction_direction,
             description=transaction_description,
             account_id=transaction_account.id,
             budget_category_id=(
@@ -95,11 +106,10 @@ def create_transaction(
     transaction_type: TransactionType,
     description: str,
     account_id: int,
+    direction: TransactionDirection = TransactionDirection.DECREMENT,
     budget_category_id: int = None,
     date_of_transaction_str: str = None,
 ) -> None:
-    """Creates a transaction of type type. By default, transactions are stored as negative."""
-
     date_of_transaction = None
     if not date_of_transaction_str:
         date_of_transaction = datetime.now(pacific_timezone).date()
@@ -118,14 +128,16 @@ def create_transaction(
         print(f"Account of id {account_id} not found. Payment not processed")
         return
 
-    if transaction_type == TransactionType.CREDIT:
+    is_credit_account = account.type == AccountType.CREDIT
+    if (direction == TransactionDirection.INCREMENT) != is_credit_account:
         account.value_in_cents += amount_in_cents
     else:
         account.value_in_cents -= amount_in_cents
 
     new_transaction = Transaction(
-        amount_in_cents=-amount_in_cents,
+        amount_in_cents=amount_in_cents,
         type=transaction_type,
+        direction=direction,
         description=description,
         account_id=account.id,
         date_of_transaction=date_of_transaction,
@@ -143,7 +155,10 @@ def create_transaction(
         )
 
         if budget_category:
-            budget_category.amount_in_cents -= amount_in_cents
+            if direction == TransactionDirection.INCREMENT:
+                budget_category.amount_in_cents += amount_in_cents
+            else:
+                budget_category.amount_in_cents -= amount_in_cents
 
     try:
         session.add(new_transaction)
