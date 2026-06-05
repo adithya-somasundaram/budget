@@ -41,7 +41,9 @@ def view_all_transactions(
 
 def bulk_create_transactions(session) -> None:
     """Bulk creates transactions. Transactions should be in the format of create_transaction input"""
+    from rich.console import Console
     from src.accounts.infra import get_all_accounts_mapping
+    from src.transactions.infra import make_summary_panel
     from src.budget_categories.infra import get_budget_category_mapping
 
     print(
@@ -55,21 +57,17 @@ def bulk_create_transactions(session) -> None:
     if date_of_transaction_str.lower() in exit_keys:
         return
 
-    still_creating = True
-
     account_mapping = get_all_accounts_mapping(session)
-    account_input_prompt = f"Enter transaction account number: "
-    for i, account in account_mapping.items():
-        account_input_prompt += f"\n({i}) {account.name}"
+    account_input_prompt = "Enter account number: "
 
     budget_category_mapping = get_budget_category_mapping(session)
-    budget_category_input_prompt = (
-        f"Enter transaction budget category number, click 'Enter' to skip: "
-    )
-    for i, budget_category in budget_category_mapping.items():
-        budget_category_input_prompt += f"\n({i}) {budget_category.name}"
+    budget_category_input_prompt = "Enter budget number (or Enter to skip): "
 
+    console = Console()
+    still_creating = True
     while still_creating:
+        console.clear()
+        console.print(make_summary_panel(session))
         still_creating = create_transaction_input_helper(
             session,
             date_of_transaction_str,
