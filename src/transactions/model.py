@@ -17,10 +17,16 @@ class TransactionType(enum.Enum):
     ADJUSTMENT = 6
 
 
+class TransactionDirection(enum.Enum):
+    INCREMENT = "increment"
+    DECREMENT = "decrement"
+
+
 class Transaction(db.Model):
     id = Column(Integer, primary_key=True)
     amount_in_cents = Column(Integer, nullable=False)
     type = Column(Enum(TransactionType), nullable=False)
+    direction = Column(Enum(TransactionDirection), nullable=False, default=TransactionDirection.DECREMENT)
     account_id = Column(Integer, ForeignKey("account.id"), nullable=True)
     date_of_transaction = Column(Date, nullable=False)
     description = Column(String(200))
