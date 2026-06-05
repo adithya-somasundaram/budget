@@ -2,7 +2,7 @@ from datetime import datetime
 
 from src.accounts.model import Account, AccountType
 from src.budget_categories.model import BudgetCategory
-from src.helpers import pacific_timezone, exit_keys
+from src.helpers import pacific_timezone, exit_keys, live_input, live_print
 from src.transactions.model import Transaction, TransactionDirection, TransactionType
 
 
@@ -13,45 +13,41 @@ def create_transaction_input_helper(
     account_input_prompt: str,
     budget_category_mapping: dict[int, BudgetCategory],
     budget_category_input_prompt: str,
+    live=None,
 ) -> bool:
     """Prompts user for transaction parameters and creates single transaction. Returns false if user exits out of transaction creation, true if transaction created or error occurred."""
 
-    # Get transaction amount in cents
-    transaction_amount = input(
+    _input = (lambda prompt: live_input(live, prompt)) if live else input
+    _print = (lambda msg: live_print(live, msg)) if live else print
+
+    transaction_amount = _input(
         "Enter transaction amount in cents (e.g. 1050 for $10.50): "
     ).strip()
     if transaction_amount.lower() in exit_keys:
         return False
     transaction_amount = int(transaction_amount)
 
-    # Get transaction account
-    print(account_input_prompt)
-    transaction_account_number = input().strip()
+    _print(account_input_prompt)
+    transaction_account_number = _input("").strip()
     if transaction_account_number.lower() in exit_keys:
         return False
     transaction_account = account_mapping.get(int(transaction_account_number), None)
     if not transaction_account:
-        print("Invalid account selected!")
+        _print("Invalid account selected!")
         return True
 
-    # Get transaction type
     transaction_type = None
     if transaction_account.transaction_type:
         transaction_type = transaction_account.transaction_type
     else:
-        transaction_type = (
-            input(
-                "Enter transaction type number:\n(1) Credit\n(2) Debit\n(3) Cash\n(4) Check\n(5) Venmo\n"
-            )
-            .strip()
-            .upper()
-        )
+        transaction_type = _input(
+            "Enter transaction type number:\n(1) Credit\n(2) Debit\n(3) Cash\n(4) Check\n(5) Venmo\n"
+        ).strip().upper()
         if transaction_type.lower() in exit_keys:
             return False
         transaction_type = TransactionType(int(transaction_type))
 
-    # Get transaction direction
-    direction_input = input(
+    direction_input = _input(
         "Enter transaction direction:\n(1) Decrement (default)\n(2) Increment\n"
     ).strip()
     if direction_input.lower() in exit_keys:
@@ -60,16 +56,14 @@ def create_transaction_input_helper(
         TransactionDirection.INCREMENT if direction_input == "2" else TransactionDirection.DECREMENT
     )
 
-    # Get transaction description, can be blank
-    transaction_description = input("Enter transaction description: ").strip()
+    transaction_description = _input("Enter transaction description: ").strip()
     if transaction_description.lower() in exit_keys:
         return False
 
-    # Get transaction budget category if budgets exist, can be blank
     transaction_budget_category = None
     if len(budget_category_mapping.values()):
-        print(budget_category_input_prompt)
-        transaction_budget_category = input().strip()
+        _print(budget_category_input_prompt)
+        transaction_budget_category = _input("").strip()
         if transaction_budget_category.lower() in exit_keys:
             return False
         transaction_budget_category = (
@@ -95,7 +89,7 @@ def create_transaction_input_helper(
         )
         return True
     except Exception as e:
-        print(f"Error creating new transaction: {str(e)}")
+        _print(f"Error creating new transaction: {str(e)}")
         session.rollback()
         return True
 

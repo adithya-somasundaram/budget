@@ -41,7 +41,8 @@ def view_all_transactions(
 
 def bulk_create_transactions(session) -> None:
     """Bulk creates transactions. Transactions should be in the format of create_transaction input"""
-    from src.accounts.infra import get_all_accounts_mapping
+    from rich.live import Live
+    from src.accounts.infra import get_all_accounts_mapping, make_summary_panel
     from src.budget_categories.infra import get_budget_category_mapping
 
     print(
@@ -55,29 +56,33 @@ def bulk_create_transactions(session) -> None:
     if date_of_transaction_str.lower() in exit_keys:
         return
 
-    still_creating = True
-
     account_mapping = get_all_accounts_mapping(session)
-    account_input_prompt = f"Enter transaction account number: "
+    account_input_prompt = "Enter transaction account number: "
     for i, account in account_mapping.items():
         account_input_prompt += f"\n({i}) {account.name}"
 
     budget_category_mapping = get_budget_category_mapping(session)
     budget_category_input_prompt = (
-        f"Enter transaction budget category number, click 'Enter' to skip: "
+        "Enter transaction budget category number, click 'Enter' to skip: "
     )
     for i, budget_category in budget_category_mapping.items():
         budget_category_input_prompt += f"\n({i}) {budget_category.name}"
 
-    while still_creating:
-        still_creating = create_transaction_input_helper(
-            session,
-            date_of_transaction_str,
-            account_mapping,
-            account_input_prompt,
-            budget_category_mapping,
-            budget_category_input_prompt,
-        )
+    with Live(make_summary_panel(session), auto_refresh=False) as live:
+        still_creating = True
+        while still_creating:
+            still_creating = create_transaction_input_helper(
+                session,
+                date_of_transaction_str,
+                account_mapping,
+                account_input_prompt,
+                budget_category_mapping,
+                budget_category_input_prompt,
+                live=live,
+            )
+            if still_creating:
+                live.update(make_summary_panel(session))
+                live.refresh()
 
 
 ### Deprecated functions below, kept for reference, may be deleted in the future ###

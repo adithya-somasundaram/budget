@@ -1,5 +1,57 @@
+from rich.columns import Columns
+from rich.panel import Panel
+from rich.table import Table
+
 from src.accounts.model import Account, AccountType
 from src.transactions.model import TransactionType
+
+
+def make_summary_panel(session) -> Panel:
+    from src.budget_categories.model import BudgetCategory
+    from src.helpers import cents_to_dollars_str
+
+    accounts: list[Account] = (
+        session.query(Account.name, Account.value_in_cents, Account.type)
+        .filter(Account.is_active == True)
+        .order_by(Account.created_at)
+        .all()
+    )
+
+    account_table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2))
+    account_table.add_column("Account")
+    account_table.add_column("Balance", justify="right")
+
+    grand_total = 0
+    for account in accounts:
+        is_credit = account.type == AccountType.CREDIT
+        value_str = ("-" if is_credit else "") + cents_to_dollars_str(account.value_in_cents)
+        account_table.add_row(account.name, value_str)
+        grand_total += -account.value_in_cents if is_credit else account.value_in_cents
+    account_table.add_section()
+    account_table.add_row("[bold]TOTAL[/bold]", f"[bold]{cents_to_dollars_str(grand_total)}[/bold]")
+
+    categories = (
+        session.query(BudgetCategory.name, BudgetCategory.amount_in_cents)
+        .filter(BudgetCategory.is_active == True)
+        .order_by(BudgetCategory.name)
+        .all()
+    )
+
+    budget_table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2))
+    budget_table.add_column("Budget")
+    budget_table.add_column("Remaining", justify="right")
+
+    if categories:
+        budget_total = 0
+        for cat in categories:
+            budget_table.add_row(cat.name, cents_to_dollars_str(cat.amount_in_cents))
+            budget_total += cat.amount_in_cents
+        liquid_total = get_liquid_total(session)
+        leftover = liquid_total - budget_total
+        budget_table.add_section()
+        budget_table.add_row("[bold]LEFTOVER[/bold]", f"[bold]{cents_to_dollars_str(leftover)}[/bold]")
+
+    return Panel(Columns([account_table, budget_table]), title="Summary")
 
 
 def get_all_accounts_mapping(

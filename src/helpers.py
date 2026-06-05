@@ -42,3 +42,18 @@ def cents_to_dollars_str(value):
 
 pacific_timezone = pytz.timezone("America/Los_Angeles")
 exit_keys = set(["quit", "exit"])
+
+
+def live_input(live, prompt: str) -> str:
+    """Pauses a rich Live display, collects input, then restarts it."""
+    live.stop()
+    result = input(prompt)
+    live.start()
+    return result
+
+
+def live_print(live, message: str) -> None:
+    """Pauses a rich Live display, prints a message, then restarts it."""
+    live.stop()
+    print(message)
+    live.start()
