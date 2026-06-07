@@ -47,7 +47,7 @@ def get_all_accounts_mapping(
     session, account_type: AccountType = None
 ) -> dict[int, Account]:
     """Returns dict mapping an integer to and account. Good for user input."""
-    query = session.query(Account.id, Account.name, Account.transaction_type).filter(
+    query = session.query(Account.id, Account.name, Account.type, Account.transaction_type).filter(
         Account.is_active == True
     )
     if account_type:
