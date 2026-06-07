@@ -2,9 +2,91 @@ from datetime import date, datetime
 
 from sqlalchemy.sql import func
 
+from src.accounts.model import Account
+from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str, pacific_timezone, exit_keys
-from src.transactions.model import Transaction
-from src.transactions.infra import create_transaction_input_helper
+from src.transactions.infra import create_transaction
+from src.transactions.model import Transaction, TransactionDirection, TransactionType
+
+
+def create_transaction_input_helper(
+    session,
+    date_of_transaction,
+    account_mapping: dict[int, Account],
+    account_input_prompt: str,
+    budget_category_mapping: dict[int, BudgetCategory],
+    budget_category_input_prompt: str,
+) -> bool:
+    """Prompts user for transaction parameters and creates single transaction. Returns false if user exits out of transaction creation, true if transaction created or error occurred."""
+
+    transaction_amount = input(
+        "Enter transaction amount in cents (e.g. 1050 for $10.50): "
+    ).strip()
+    if transaction_amount.lower() in exit_keys:
+        return False
+    transaction_amount = int(transaction_amount)
+
+    transaction_account_number = input(account_input_prompt).strip()
+    if transaction_account_number.lower() in exit_keys:
+        return False
+    transaction_account = account_mapping.get(int(transaction_account_number), None)
+    if not transaction_account:
+        print("Invalid account selected!")
+        return True
+
+    transaction_type = None
+    if transaction_account.transaction_type:
+        transaction_type = transaction_account.transaction_type
+    else:
+        transaction_type_input = input("Enter transaction type number: ").strip()
+        if transaction_type_input.lower() in exit_keys:
+            return False
+        transaction_type = TransactionType(int(transaction_type_input))
+
+    direction_input = input(
+        "Enter direction (1/2, default 1): "
+    ).strip()
+    if direction_input.lower() in exit_keys:
+        return False
+    transaction_direction = (
+        TransactionDirection.INCREMENT if direction_input == "2" else TransactionDirection.DECREMENT
+    )
+
+    transaction_description = input("Enter transaction description: ").strip()
+    if transaction_description.lower() in exit_keys:
+        return False
+
+    transaction_budget_category = None
+    if len(budget_category_mapping.values()):
+        transaction_budget_category = input(budget_category_input_prompt).strip()
+        if transaction_budget_category.lower() in exit_keys:
+            return False
+        transaction_budget_category = (
+            budget_category_mapping.get(int(transaction_budget_category), None)
+            if transaction_budget_category != ""
+            else None
+        )
+
+    try:
+        create_transaction(
+            session,
+            amount_in_cents=transaction_amount,
+            transaction_type=transaction_type,
+            direction=transaction_direction,
+            description=transaction_description,
+            account_id=transaction_account.id,
+            budget_category_id=(
+                transaction_budget_category.id if transaction_budget_category else None
+            ),
+            date_of_transaction_str=(
+                date_of_transaction if date_of_transaction != "" else None
+            ),
+        )
+        return True
+    except Exception as e:
+        print(f"Error creating new transaction: {str(e)}")
+        session.rollback()
+        return True
 
 
 def view_all_transactions(
