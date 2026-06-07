@@ -5,11 +5,19 @@ from src.budget_categories.infra import create_budget_category
 
 
 def bulk_create_budget_categories(session) -> None:
+    from rich.console import Console
+
     print(
         "Lets create some budget categories! Enter 'quit' or 'exit' at any time to save and exit."
     )
 
+    console = Console()
+
     while True:
+        console.clear()
+        panel, _ = _make_budget_category_panel(session)
+        console.print(panel)
+
         name = input("Enter budget category name: ").strip()
         if name.lower() in exit_keys:
             return
