@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.accounts.model import Account
+from src.accounts.model import Account, AccountType
 from src.helpers import pacific_timezone
 from src.transfers.model import TransferLedger
 
@@ -10,7 +10,6 @@ def transfer(
     from_account_id: int,
     to_account_id: int,
     amount_in_cents: int,
-    is_credit_payment: bool,
     description: str = None,
 ) -> None:
     """Helper function to transfer amount from one account to another. Both accounts must be active."""
@@ -43,6 +42,8 @@ def transfer(
         raise Exception(f"No active account TO account found!")
 
     before_to_account_balance = to_account_obj.value_in_cents
+
+    is_credit_payment = from_account_obj.type == AccountType.CREDIT
 
     # Perform transfer
     if is_credit_payment:

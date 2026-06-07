@@ -7,11 +7,11 @@ from src.transfers.infra import transfer
 def transfer_input(session) -> None:
     """Transfers amount from one account to another."""
     from rich.console import Console
-    from src.transactions.infra import make_summary_panel
+    from src.accounts.infra import make_accounts_panel
 
     console = Console()
     console.clear()
-    console.print(make_summary_panel(session))
+    console.print(make_accounts_panel(session))
 
     amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:
@@ -44,7 +44,6 @@ def transfer_input(session) -> None:
             from_account.id,
             to_account.id,
             amount_in_cents,
-            from_account.type == AccountType.CREDIT,
             description if description != "" else None,
         )
     except Exception as e:
@@ -59,32 +58,37 @@ def transfer_input(session) -> None:
 def create_credit_payment(session) -> None:
     """Subtracts amount from credit account and another paying account."""
     from rich.console import Console
-    from src.transactions.infra import make_summary_panel
+    from src.accounts.infra import make_credit_payment_panel
 
     console = Console()
     console.clear()
-    console.print(make_summary_panel(session))
+    console.print(make_credit_payment_panel(session))
 
     amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:
         return
     amount_in_cents = int(amount_in_cents)
 
-    account_mapping = get_all_accounts_mapping(session)
+    credit_account_mapping = get_all_accounts_mapping(session, AccountType.CREDIT)
+    paying_account_mapping = {
+        i: account
+        for i, account in enumerate(
+            (a for a in get_all_accounts_mapping(session).values() if a.type != AccountType.CREDIT),
+            1,
+        )
+    }
 
     from_account_id = input("Enter credit account number: ").strip()
     if from_account_id.lower() in exit_keys:
         return
-    from_account = account_mapping.get(int(from_account_id), None)
+    from_account = credit_account_mapping.get(int(from_account_id), None)
     if not from_account:
         raise Exception("Invalid account selected!")
-    if from_account.type != AccountType.CREDIT:
-        raise Exception(f"{from_account.name} is not a credit account!")
 
     to_account_id = input("Enter paying account number: ").strip()
     if to_account_id.lower() in exit_keys:
         return
-    to_account = account_mapping.get(int(to_account_id), None)
+    to_account = paying_account_mapping.get(int(to_account_id), None)
     if not to_account:
         raise Exception("Invalid account selected!")
 
@@ -94,7 +98,6 @@ def create_credit_payment(session) -> None:
             from_account.id,
             to_account.id,
             amount_in_cents,
-            True,
             f"Credit payment from {from_account.name} to {to_account.name}",
         )
     except Exception as e:
