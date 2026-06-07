@@ -18,7 +18,7 @@ Getting started:
 To install all dependencies:
 
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 To start the application in a terminal shell run:
@@ -31,8 +31,8 @@ This will create the DB if its your first time running, and import all service f
 
 - `bulk_create_accounts`: Will prompt you to input account name, type (debit, credit, venmo, cash, check, investing), and value
 - `adjust_account_value`: Allows you to adjust the value of a given account. Records a transaction to track adjustment.
-- `transfer`: Transfers value from one account to another. No transaction recorded.
+- `transfer_input`: Transfers value from one account to another. Recorded in the transfer ledger, not as a transaction.
 - `bulk_create_transactions`: Creates transactions from an inputted account name. Also takes in transaction type (debit, credit, cash, check, venmo, adjustment). Can optionally deduct from a budget. Default transaction date is current date unless otherwise specified.
 - `print_summary`: Displays values of all accounts, budgets and sums net worth!
 - `bulk_create_budget_categories`, `adjust_budget_category` or `deactivate_budget_category`: Allows for the creation or adjustment of a budget category
-- `create_credit_payment`: Handles paying off a credit account at the deduction of another account. Transaction is recorded for both accounts.
+- `create_credit_payment`: Handles paying off a credit account at the deduction of another account. Recorded in the transfer ledger, not as a transaction.
