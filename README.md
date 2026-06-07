@@ -5,7 +5,7 @@ Core features:
 
 1. Create accounts that hold money. Think of your debit, investing, retirement, credit accounts
 2. Create budgets for categories like food, bills, clothes, etc
-3. Record and view transactions that deduct from your accounts (adds to credit accounts) and optionally deducts from your budget
+3. Record and view transactions that increment or decrement your accounts (credit accounts work in reverse — a decrement increases what you owe) and optionally adjust your budget
 
 Secondary features:
 
