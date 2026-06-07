@@ -26,9 +26,10 @@ def make_account_creation_panel(session) -> Panel:
         account_table.add_row(account.name, account.type.value, value_str)
 
     account_type_table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2))
+    account_type_table.add_column("#", justify="right")
     account_type_table.add_column("Account Type")
-    for t in AccountType:
-        account_type_table.add_row(t.value)
+    for i, t in enumerate(AccountType, 1):
+        account_type_table.add_row(str(i), t.value)
 
     transaction_type_table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2))
     transaction_type_table.add_column("#", justify="right")

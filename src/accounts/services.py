@@ -45,9 +45,15 @@ def bulk_create_accounts(session) -> None:
         if name.lower() in exit_keys:
             return
 
-        account_type = input("Enter account type: ").strip().lower()
-        if account_type.lower() in exit_keys:
+        account_type_input = input("Enter account type number: ").strip()
+        if account_type_input.lower() in exit_keys:
             return
+        account_types = list(AccountType)
+        try:
+            account_type = account_types[int(account_type_input) - 1]
+        except (ValueError, IndexError):
+            print("Invalid account type selected!")
+            continue
 
         value = input(
             "Enter account value in cents, click 'Enter' to set to 0: "
@@ -72,7 +78,7 @@ def bulk_create_accounts(session) -> None:
             create_new_account(
                 session,
                 name,
-                AccountType(account_type),
+                account_type,
                 int(value),
                 account_transaction_type,
             )
