@@ -28,15 +28,19 @@ def deactivate_account(
 
 
 def bulk_create_accounts(session) -> None:
+    from rich.console import Console
+    from src.accounts.infra import make_account_creation_panel
+
     print(
         "Lets create some accounts! Enter 'quit' or 'exit' at any time to save and exit."
     )
 
-    name = None
-    account_type = None
-    value = 0
+    console = Console()
 
     while True:
+        console.clear()
+        console.print(make_account_creation_panel(session))
+
         name = input("Enter account name: ").strip()
         if name.lower() in exit_keys:
             return
@@ -53,10 +57,9 @@ def bulk_create_accounts(session) -> None:
         elif value == "":
             value = 0
 
-        print(
-            "Does the account have an exclusive transaction type (will be used in transactions):\n(1) Credit\n(2) Debit\n(3) Cash\n(4) Check\n(5) Venmo"
-        )
-        account_transaction_type_input = input().strip()
+        account_transaction_type_input = input(
+            "Enter exclusive transaction type number, click 'Enter' to skip: "
+        ).strip()
         account_transaction_type = None
         if account_transaction_type_input.lower() in exit_keys:
             return
