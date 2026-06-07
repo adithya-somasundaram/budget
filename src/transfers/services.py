@@ -6,6 +6,13 @@ from src.transfers.infra import transfer
 
 def transfer_input(session) -> None:
     """Transfers amount from one account to another."""
+    from rich.console import Console
+    from src.accounts.infra import make_accounts_panel
+
+    console = Console()
+    console.clear()
+    console.print(make_accounts_panel(session))
+
     amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:
         return
@@ -13,22 +20,14 @@ def transfer_input(session) -> None:
 
     account_mapping = get_all_accounts_mapping(session)
 
-    # User selects from account from list of active accounts
-    print("Enter from account number: ")
-    for i, account in account_mapping.items():
-        print(f"({i}) {account.name}")
-    from_account_id = input().strip()
+    from_account_id = input("Enter from account number: ").strip()
     if from_account_id.lower() in exit_keys:
         return
     from_account = account_mapping.get(int(from_account_id), None)
     if not from_account:
         raise Exception("Invalid account selected!")
 
-    # User selects to account from list of active accounts
-    print("Enter to account number: ")
-    for i, account in account_mapping.items():
-        print(f"({i}) {account.name}")
-    to_account_id = input().strip()
+    to_account_id = input("Enter to account number: ").strip()
     if to_account_id.lower() in exit_keys:
         return
     to_account = account_mapping.get(int(to_account_id), None)
@@ -45,7 +44,6 @@ def transfer_input(session) -> None:
             from_account.id,
             to_account.id,
             amount_in_cents,
-            from_account.type == AccountType.CREDIT,
             description if description != "" else None,
         )
     except Exception as e:
@@ -59,33 +57,38 @@ def transfer_input(session) -> None:
 
 def create_credit_payment(session) -> None:
     """Subtracts amount from credit account and another paying account."""
+    from rich.console import Console
+    from src.accounts.infra import make_credit_payment_panel
+
+    console = Console()
+    console.clear()
+    console.print(make_credit_payment_panel(session))
+
     amount_in_cents = input("Enter transfer amount in cents: ").strip()
     if amount_in_cents.lower() in exit_keys:
         return
     amount_in_cents = int(amount_in_cents)
 
     credit_account_mapping = get_all_accounts_mapping(session, AccountType.CREDIT)
-    account_mapping = get_all_accounts_mapping(session)
+    paying_account_mapping = {
+        i: account
+        for i, account in enumerate(
+            (a for a in get_all_accounts_mapping(session).values() if a.type != AccountType.CREDIT),
+            1,
+        )
+    }
 
-    # User selects from account from list of active accounts
-    print("Enter credit account: ")
-    for i, account in credit_account_mapping.items():
-        print(f"({i}) {account.name}")
-    from_account_id = input().strip()
+    from_account_id = input("Enter credit account number: ").strip()
     if from_account_id.lower() in exit_keys:
         return
     from_account = credit_account_mapping.get(int(from_account_id), None)
     if not from_account:
         raise Exception("Invalid account selected!")
 
-    # User selects to account from list of active accounts
-    print("Enter to paying account number: ")
-    for i, account in account_mapping.items():
-        print(f"({i}) {account.name}")
-    to_account_id = input().strip()
+    to_account_id = input("Enter paying account number: ").strip()
     if to_account_id.lower() in exit_keys:
         return
-    to_account = account_mapping.get(int(to_account_id), None)
+    to_account = paying_account_mapping.get(int(to_account_id), None)
     if not to_account:
         raise Exception("Invalid account selected!")
 
@@ -95,7 +98,6 @@ def create_credit_payment(session) -> None:
             from_account.id,
             to_account.id,
             amount_in_cents,
-            True,
             f"Credit payment from {from_account.name} to {to_account.name}",
         )
     except Exception as e:

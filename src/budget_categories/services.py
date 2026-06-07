@@ -5,11 +5,19 @@ from src.budget_categories.infra import create_budget_category
 
 
 def bulk_create_budget_categories(session) -> None:
+    from rich.console import Console
+
     print(
         "Lets create some budget categories! Enter 'quit' or 'exit' at any time to save and exit."
     )
 
+    console = Console()
+
     while True:
+        console.clear()
+        panel, _ = _make_budget_category_panel(session)
+        console.print(panel)
+
         name = input("Enter budget category name: ").strip()
         if name.lower() in exit_keys:
             return
@@ -29,46 +37,74 @@ def bulk_create_budget_categories(session) -> None:
             session.rollback()
 
 
-def deactivate_budget_category(session, budget_category_name: str) -> None:
-    """Deactivates budget category with given name."""
-    budget_category = (
+def _make_budget_category_panel(session):
+    from rich.panel import Panel
+    from rich.table import Table
+
+    categories = (
         session.query(BudgetCategory)
-        .filter(
-            BudgetCategory.name == budget_category_name.upper(),
-            BudgetCategory.is_active == True,
-        )
-        .first()
+        .filter(BudgetCategory.is_active == True)
+        .order_by(BudgetCategory.name.asc())
+        .all()
     )
 
+    table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2))
+    table.add_column("#", justify="right")
+    table.add_column("Budget")
+    table.add_column("Amount", justify="right")
+    for i, cat in enumerate(categories, 1):
+        table.add_row(str(i), cat.name, cents_to_dollars_str(cat.amount_in_cents))
+
+    return Panel(table, title="Budget Categories"), {i: cat for i, cat in enumerate(categories, 1)}
+
+
+def deactivate_budget_category(session) -> None:
+    """Prompts user to select and deactivate a budget category."""
+    from rich.console import Console
+
+    console = Console()
+    console.clear()
+    panel, mapping = _make_budget_category_panel(session)
+    console.print(panel)
+
+    selection = input("Enter budget number to deactivate: ").strip()
+    if selection.lower() in exit_keys:
+        return
+    budget_category = mapping.get(int(selection), None)
     if not budget_category:
-        print(f"Could not find budget category with name {budget_category_name}")
+        print("Invalid budget category selected!")
         return
 
     budget_category.is_active = False
     session.commit()
+    print(f"Deactivated budget category {budget_category.name}")
 
 
-def adjust_budget_category(
-    session, budget_category_name: str, new_amount_in_cents: int
-) -> None:
-    """Adjusts budget category with given name to new_amount_in_cents."""
-    budget_category = (
-        session.query(BudgetCategory)
-        .filter(
-            BudgetCategory.name == budget_category_name.upper(),
-            BudgetCategory.is_active == True,
-        )
-        .first()
-    )
+def adjust_budget_category(session) -> None:
+    """Prompts user to select a budget category and adjust its amount."""
+    from rich.console import Console
 
+    console = Console()
+    console.clear()
+    panel, mapping = _make_budget_category_panel(session)
+    console.print(panel)
+
+    selection = input("Enter budget number to adjust: ").strip()
+    if selection.lower() in exit_keys:
+        return
+    budget_category = mapping.get(int(selection), None)
     if not budget_category:
-        print(f"Could not find budget category with name {budget_category_name}")
+        print("Invalid budget category selected!")
         return
 
-    budget_category.amount_in_cents = new_amount_in_cents
+    new_amount = input("Enter new budget amount in cents: ").strip()
+    if new_amount.lower() in exit_keys:
+        return
+
+    budget_category.amount_in_cents = int(new_amount)
     session.commit()
     print(
-        f"Adjusted budget category {budget_category_name} to new amount {cents_to_dollars_str(new_amount_in_cents)}"
+        f"Adjusted budget category {budget_category.name} to new amount {cents_to_dollars_str(budget_category.amount_in_cents)}"
     )
 
 
