@@ -7,7 +7,7 @@ from src.transfers.infra import transfer
 def transfer_input(session) -> None:
     """Transfers amount from one account to another."""
     from rich.console import Console
-    from src.accounts.infra import make_accounts_panel
+    from src.accounts.view import make_accounts_panel
 
     console = Console()
     console.clear()
@@ -58,7 +58,7 @@ def transfer_input(session) -> None:
 def create_credit_payment(session) -> None:
     """Subtracts amount from credit account and another paying account."""
     from rich.console import Console
-    from src.accounts.infra import make_credit_payment_panel
+    from src.accounts.view import make_credit_payment_panel
 
     console = Console()
     console.clear()

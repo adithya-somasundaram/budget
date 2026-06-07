@@ -2,6 +2,7 @@ from src.accounts.infra import get_liquid_total
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str, exit_keys
 from src.budget_categories.infra import create_budget_category
+from src.budget_categories.view import make_budget_category_panel
 
 
 def bulk_create_budget_categories(session) -> None:
@@ -15,7 +16,7 @@ def bulk_create_budget_categories(session) -> None:
 
     while True:
         console.clear()
-        panel, _ = _make_budget_category_panel(session)
+        panel, _ = make_budget_category_panel(session)
         console.print(panel)
 
         name = input("Enter budget category name: ").strip()
@@ -37,26 +38,6 @@ def bulk_create_budget_categories(session) -> None:
             session.rollback()
 
 
-def _make_budget_category_panel(session):
-    from rich.panel import Panel
-    from rich.table import Table
-
-    categories = (
-        session.query(BudgetCategory)
-        .filter(BudgetCategory.is_active == True)
-        .order_by(BudgetCategory.name.asc())
-        .all()
-    )
-
-    table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2))
-    table.add_column("#", justify="right")
-    table.add_column("Budget")
-    table.add_column("Amount", justify="right")
-    for i, cat in enumerate(categories, 1):
-        table.add_row(str(i), cat.name, cents_to_dollars_str(cat.amount_in_cents))
-
-    return Panel(table, title="Budget Categories"), {i: cat for i, cat in enumerate(categories, 1)}
-
 
 def deactivate_budget_category(session) -> None:
     """Prompts user to select and deactivate a budget category."""
@@ -64,7 +45,7 @@ def deactivate_budget_category(session) -> None:
 
     console = Console()
     console.clear()
-    panel, mapping = _make_budget_category_panel(session)
+    panel, mapping = make_budget_category_panel(session)
     console.print(panel)
 
     selection = input("Enter budget number to deactivate: ").strip()
@@ -86,7 +67,7 @@ def adjust_budget_category(session) -> None:
 
     console = Console()
     console.clear()
-    panel, mapping = _make_budget_category_panel(session)
+    panel, mapping = make_budget_category_panel(session)
     console.print(panel)
 
     selection = input("Enter budget number to adjust: ").strip()

@@ -29,7 +29,7 @@ def deactivate_account(
 
 def bulk_create_accounts(session) -> None:
     from rich.console import Console
-    from src.accounts.infra import make_account_creation_panel
+    from src.accounts.view import make_account_creation_panel
 
     print(
         "Lets create some accounts! Enter 'quit' or 'exit' at any time to save and exit."
