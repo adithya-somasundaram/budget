@@ -87,6 +87,55 @@ def bulk_create_accounts(session) -> None:
             session.rollback()
 
 
+def bulk_adjust_accounts(session) -> None:
+    """Loops, letting the user pick an account by number and set its new value in cents. Useful for accounts (e.g. investments) whose value needs periodic manual correction."""
+    from rich.console import Console
+    from src.accounts.view import make_accounts_panel
+
+    console = Console()
+
+    while True:
+        console.clear()
+        console.print(make_accounts_panel(session))
+
+        accounts: list[Account] = (
+            session.query(Account)
+            .filter(Account.is_active == True)
+            .order_by(Account.created_at)
+            .all()
+        )
+        account_mapping = {i: account for i, account in enumerate(accounts, 1)}
+        print(
+            "Lets adjust some account values! Enter 'quit' or 'exit' at any time to save and exit."
+        )
+
+        selection = input("Enter account number to adjust: ").strip()
+        if selection.lower() in exit_keys:
+            return
+        account = (
+            account_mapping.get(int(selection), None) if selection.isdigit() else None
+        )
+        if not account:
+            print("Invalid account selected!")
+            continue
+
+        new_value = input("Enter new account value in cents: ").strip()
+        if new_value.lower() in exit_keys:
+            return
+
+        reason = input("Enter reason (optional): ").strip()
+        if reason.lower() in exit_keys:
+            return
+        if reason == "":
+            reason = "Manual bulk adjustment"
+
+        try:
+            adjust_account_value(session, account.name, int(new_value), reason=reason)
+        except Exception as e:
+            print(f"Error adjusting account: {str(e)}")
+            session.rollback()
+
+
 def print_summary(session, include_budget=True) -> None:
     from src.budget_categories.services import print_budget_summary
 
@@ -158,7 +207,11 @@ def adjust_account_value(
         raise Exception(f"No active account found with name {account_name}!")
 
     adjustment_amount_in_cents = new_value_in_cents - account.value_in_cents
-    direction = TransactionDirection.INCREMENT if adjustment_amount_in_cents > 0 else TransactionDirection.DECREMENT
+    direction = (
+        TransactionDirection.INCREMENT
+        if adjustment_amount_in_cents > 0
+        else TransactionDirection.DECREMENT
+    )
 
     create_transaction(
         session,
