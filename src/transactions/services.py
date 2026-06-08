@@ -125,7 +125,7 @@ def bulk_create_transactions(session) -> None:
     """Bulk creates transactions. Transactions should be in the format of create_transaction input"""
     from rich.console import Console
     from src.accounts.infra import get_all_accounts_mapping
-    from src.transactions.infra import make_summary_panel
+    from src.transactions.view import make_summary_panel
     from src.budget_categories.infra import get_budget_category_mapping
 
     print(
