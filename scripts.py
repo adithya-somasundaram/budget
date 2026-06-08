@@ -11,6 +11,7 @@ print(
     """
 Available functions:
 - bulk_create_accounts: create accounts
+- bulk_adjust_accounts: adjust account values (e.g. investment accounts)
 - bulk_create_budget_categories: create budget categories
 - adjust_budget_category: adjust a budget category's amount
 - deactivate_budget_category: deactivate a budget category
