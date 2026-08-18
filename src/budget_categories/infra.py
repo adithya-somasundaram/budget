@@ -4,7 +4,6 @@ from src.budget_categories.model import BudgetCategory
 
 def get_budget_leftover(session) -> int:
     """Returns unbudgeted liquid cash in cents: liquid total minus money still earmarked in budgets.
-
     Overspent (negative) categories count as 0 earmarked. The overage has already left the
     accounts, so it is reflected in the liquid total and must not be added back here.
     """
@@ -48,7 +47,7 @@ def get_budget_category_mapping(session) -> dict[int, BudgetCategory]:
 
 
 def _get_all_active_budget_categories(session) -> list[BudgetCategory]:
-    """Returns list of all active budget category names"""
+    """Returns list of all active budget category objects"""
     return (
         session.query(BudgetCategory)
         .filter(BudgetCategory.is_active == True)
