@@ -1,7 +1,7 @@
 from rich.columns import Columns
 from rich.panel import Panel
 
-from src.accounts.infra import get_liquid_total
+from src.budget_categories.infra import get_budget_leftover
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str
 from src.view_helpers import account_value_table, get_active_accounts, new_table, transaction_type_table
@@ -21,12 +21,9 @@ def make_summary_panel(session) -> Panel:
     budget_table = new_table("#", "Budget", "Remaining")
 
     if categories:
-        budget_total = 0
         for i, cat in enumerate(categories, 1):
             budget_table.add_row(str(i), cat.name, cents_to_dollars_str(cat.amount_in_cents))
-            budget_total += cat.amount_in_cents
-        liquid_total = get_liquid_total(session)
-        leftover = liquid_total - budget_total
+        leftover = get_budget_leftover(session)
         budget_table.add_section()
         budget_table.add_row("", "[bold]LEFTOVER[/bold]", f"[bold]{cents_to_dollars_str(leftover)}[/bold]")
 

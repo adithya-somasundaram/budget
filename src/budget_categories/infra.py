@@ -1,4 +1,18 @@
+from src.accounts.infra import get_liquid_total
 from src.budget_categories.model import BudgetCategory
+
+
+def get_budget_leftover(session) -> int:
+    """Returns unbudgeted liquid cash in cents: liquid total minus money still earmarked in budgets.
+
+    Overspent (negative) categories count as 0 earmarked. The overage has already left the
+    accounts, so it is reflected in the liquid total and must not be added back here.
+    """
+    earmarked = sum(
+        max(0, category.amount_in_cents)
+        for category in _get_all_active_budget_categories(session)
+    )
+    return get_liquid_total(session) - earmarked
 
 
 def create_budget_category(session, name: str, amount_in_cents=0) -> None:
