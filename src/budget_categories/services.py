@@ -1,7 +1,6 @@
-from src.accounts.infra import get_liquid_total
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str, exit_keys
-from src.budget_categories.infra import create_budget_category
+from src.budget_categories.infra import create_budget_category, get_budget_leftover
 from src.budget_categories.view import make_budget_category_panel
 
 
@@ -103,17 +102,14 @@ def print_budget_summary(session) -> None:
         return
 
     output = ""
-    budget_total = 0
 
     max_name_len = max(len(c.name) for c in categories)
     label_len = max(max_name_len, len("LEFTOVER"))
 
     for category in categories:
-        budget_total += category.amount_in_cents
         output += f"{category.name:<{label_len}} : {cents_to_dollars_str(category.amount_in_cents)}\n"
 
-    liquid_total = get_liquid_total(session)
-    leftover = liquid_total - budget_total
+    leftover = get_budget_leftover(session)
 
     output += f"{'LEFTOVER':<{label_len}} : {cents_to_dollars_str(leftover)}"
     print(output)
