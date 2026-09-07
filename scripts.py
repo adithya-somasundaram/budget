@@ -3,6 +3,7 @@ from src.accounts.services import *
 from src.budget_categories.services import *
 from src.transfers.services import *
 from src.transactions.services import *
+from src.agent.services import agent
 
 app.app_context().push()
 db.create_all()
@@ -20,5 +21,6 @@ Available functions:
 - create_credit_payment: pay off a credit account
 - print_summary / print_liquid_summary: view account and budget summaries
 - view_all_transactions: view recorded transactions
+- agent: open a conversational assistant to enter transactions/budgets/adjustments in plain language
 """
 )
