@@ -41,13 +41,7 @@ This will create the DB if its your first time running, and import all service f
 
 `agent()` opens a conversational assistant where you can describe your transactions, budget changes, and account adjustments in plain language (e.g. "spent $42 on groceries from keypoint, got my $2000 paycheck"). It maps them onto the same functions above, shows you a summary table of exactly what it's about to write, and only commits after you confirm — nothing touches the DB without an explicit yes.
 
-This is the only feature that requires an [Anthropic API key](https://console.anthropic.com); every other function works without one. To set it up, copy the example env file and paste your key into it:
-
-```
-cp .env.example .env
-```
-
-`.env` is gitignored, so your key is never committed. On startup `scripts.py` loads it automatically — no need to export anything. A real exported `ANTHROPIC_API_KEY` still takes precedence if you set one. Then just run the app and call:
+This is the only feature that requires an [Anthropic API key](https://console.anthropic.com) stored in your local `.env` (view `.env.example` for setup) `.env` is gitignored, so your key is never committed. On startup `scripts.py` loads it automatically — no need to export anything. A real exported `ANTHROPIC_API_KEY` still takes precedence if you set one. Then just run the app and call:
 
 ```
 agent()
