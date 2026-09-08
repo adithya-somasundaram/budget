@@ -10,7 +10,7 @@ import anthropic
 from src.agent.tools import ALL_TOOLS
 from src.helpers import exit_keys
 
-MODEL = "claude-opus-5"
+MODEL = "claude-haiku-4-5"
 
 SYSTEM_PROMPT = """You are a budgeting assistant embedded in a personal-finance CLI.
 The user will describe transactions, budget changes, and account adjustments in
@@ -42,7 +42,7 @@ def agent() -> None:
     client = anthropic.Anthropic()
     messages = []
 
-    print("Budget agent ready. Describe your transactions or changes. Type 'quit' to exit.\n")
+    print(f"Budget agent ready ({MODEL}). Describe your transactions or changes. Type 'quit' to exit.\n")
 
     while True:
         user_input = input("you> ").strip()
