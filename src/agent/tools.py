@@ -11,6 +11,7 @@ from rich.console import Console
 
 from app import session
 from src.accounts.model import Account, AccountType
+from src.accounts.infra import create_new_account
 from src.accounts.services import adjust_account_value
 from src.budget_categories.infra import create_budget_category, get_budget_leftover
 from src.budget_categories.model import BudgetCategory
@@ -177,6 +178,63 @@ def record_transactions(transactions: list[dict]) -> str:
 
 
 @beta_tool
+def create_accounts(accounts: list[dict]) -> str:
+    """Create one or more new accounts, after showing a summary table and getting
+    confirmation.
+
+    Each item in `accounts` is an object with:
+      - name (str, required): the account name (stored uppercase).
+      - type (str, required): one of credit, debit, cash, check, venmo, investing.
+      - value_cents (int, optional): the starting balance in cents. Defaults to 0.
+        For a credit account this is what is currently owed.
+      - transaction_type (str, optional): pins the account to an exclusive transaction
+        type (credit, debit, cash, check, venmo) so future transactions on it don't
+        need one specified. Usually omitted.
+
+    Call list_accounts first to avoid creating a duplicate of an existing account.
+    Returns a message stating whether the user confirmed.
+    """
+    staged = []
+    for a in accounts:
+        try:
+            acct_type = AccountType[str(a["type"]).upper()]
+        except KeyError:
+            return f"'{a.get('type')}' is not a valid account type (credit, debit, cash, check, venmo, investing). Nothing was written; ask the user to clarify."
+
+        ttype = None
+        if a.get("transaction_type"):
+            try:
+                ttype = TransactionType[str(a["transaction_type"]).upper()]
+            except KeyError:
+                return f"'{a['transaction_type']}' is not a valid transaction type. Nothing was written; ask the user to clarify."
+
+        staged.append(
+            {
+                "name": a["name"].upper(),
+                "type": acct_type,
+                "value": int(a.get("value_cents") or 0),
+                "ttype": ttype,
+            }
+        )
+
+    table = new_table("Account", "Type", "Starting Balance", "Txn Type", justify_first_right=False)
+    for s in staged:
+        table.add_row(
+            s["name"],
+            s["type"].value,
+            cents_to_dollars_str(s["value"]),
+            s["ttype"].name.title() if s["ttype"] else "-",
+        )
+
+    if not _confirm(table, "Create these accounts?"):
+        return "User declined. Nothing was written. Ask what they'd like to change."
+
+    for s in staged:
+        create_new_account(session, s["name"], s["type"], s["value"], s["ttype"])
+    return f"Confirmed. Created {len(staged)} account(s)."
+
+
+@beta_tool
 def adjust_accounts(adjustments: list[dict]) -> str:
     """Set the value of one or more accounts to a new absolute amount (useful for
     investment accounts whose value drifts), after showing a before/after table and
@@ -269,6 +327,7 @@ ALL_TOOLS = [
     list_accounts,
     list_budget_categories,
     record_transactions,
+    create_accounts,
     adjust_accounts,
     set_budgets,
 ]

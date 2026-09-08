@@ -39,7 +39,14 @@ This will create the DB if its your first time running, and import all service f
 
 ## Agent (natural-language entry)
 
-`agent()` opens a conversational assistant where you can describe your transactions, budget changes, and account adjustments in plain language (e.g. "spent $42 on groceries from keypoint, got my $2000 paycheck"). It maps them onto the same functions above, shows you a summary table of exactly what it's about to write, and only commits after you confirm — nothing touches the DB without an explicit yes.
+`agent()` opens a conversational assistant where you can describe your transactions, budget changes, and account work in plain language (e.g. "spent $42 on groceries from keypoint, got my $2000 paycheck"). It maps them onto the same functions above, shows you a summary table of exactly what it's about to write, and only commits after you confirm — nothing touches the DB without an explicit yes.
+
+It can currently:
+
+- **Record transactions** — one or many at once, with direction (spending vs. income), type, and an optional budget category.
+- **Create accounts** — new debit/credit/cash/check/venmo/investing accounts with a starting balance.
+- **Adjust accounts** — set an account to a new value (handy for investment accounts), logged as an adjustment.
+- **Create and adjust budgets** — add a budget category or set an existing one to a new amount.
 
 This is the only feature that requires an [Anthropic API key](https://console.anthropic.com) stored in your local `.env` (view `.env.example` for setup) `.env` is gitignored, so your key is never committed. On startup `scripts.py` loads it automatically — no need to export anything. A real exported `ANTHROPIC_API_KEY` still takes precedence if you set one. Then just run the app and call:
 
