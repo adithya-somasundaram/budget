@@ -221,3 +221,46 @@ def adjust_account_value(
         account.id,
         direction=direction,
     )
+
+
+def update_account(
+    session,
+    account_name: str,
+    new_name: str = None,
+    new_type: AccountType = None,
+    new_transaction_type: TransactionType = None,
+) -> None:
+    """Updates an account's name, type, and/or exclusive transaction type.
+
+    Only the fields you pass are changed. Does not touch the account's value
+    (use adjust_account_value for that). Changing type affects how the account is
+    counted in totals (credit balances are subtracted).
+    """
+    account: Account = (
+        session.query(Account)
+        .filter(Account.name == account_name.upper(), Account.is_active == True)
+        .first()
+    )
+
+    if not account:
+        raise Exception(f"No active account found with name {account_name}!")
+
+    if new_name:
+        target = new_name.upper()
+        existing = (
+            session.query(Account)
+            .filter(Account.name == target, Account.id != account.id)
+            .first()
+        )
+        if existing:
+            raise Exception(f"An account named {target} already exists!")
+        account.name = target
+
+    if new_type:
+        account.type = new_type
+
+    if new_transaction_type:
+        account.transaction_type = new_transaction_type
+
+    session.commit()
+    print(f"Updated account {account.name}")

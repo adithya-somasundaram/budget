@@ -12,7 +12,7 @@ from rich.console import Console
 from app import session
 from src.accounts.model import Account, AccountType
 from src.accounts.infra import create_new_account
-from src.accounts.services import adjust_account_value
+from src.accounts.services import adjust_account_value, update_account
 from src.budget_categories.infra import create_budget_category, get_budget_leftover
 from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str
@@ -280,6 +280,83 @@ def adjust_accounts(adjustments: list[dict]) -> str:
 
 
 @beta_tool
+def update_accounts(updates: list[dict]) -> str:
+    """Change an account's name, type, and/or exclusive transaction type (NOT its
+    value — use adjust_accounts for that), after showing a before/after table and
+    getting confirmation.
+
+    Each item in `updates` is an object with:
+      - account (str, required): the current account name.
+      - new_name (str, optional): rename the account to this.
+      - new_type (str, optional): change the account type to one of credit, debit,
+        cash, check, venmo, investing. Note this changes how the account counts
+        toward totals (credit balances are subtracted).
+      - new_transaction_type (str, optional): change the exclusive transaction type
+        to one of credit, debit, cash, check, venmo.
+
+    Only the fields you provide are changed. Call list_accounts first to resolve the
+    current name. Returns a message stating whether the user confirmed.
+    """
+    staged = []
+    for u in updates:
+        account = _find_account(u["account"])
+        if not account:
+            return f"No active account named '{u['account']}'. Nothing was written; ask the user to clarify."
+
+        new_type = None
+        if u.get("new_type"):
+            try:
+                new_type = AccountType[str(u["new_type"]).upper()]
+            except KeyError:
+                return f"'{u['new_type']}' is not a valid account type (credit, debit, cash, check, venmo, investing). Nothing was written; ask the user to clarify."
+
+        new_ttype = None
+        if u.get("new_transaction_type"):
+            try:
+                new_ttype = TransactionType[str(u["new_transaction_type"]).upper()]
+            except KeyError:
+                return f"'{u['new_transaction_type']}' is not a valid transaction type. Nothing was written; ask the user to clarify."
+
+        staged.append(
+            {
+                "account": account,
+                "new_name": u["new_name"].upper() if u.get("new_name") else None,
+                "new_type": new_type,
+                "new_ttype": new_ttype,
+            }
+        )
+
+    table = new_table("Account", "Name", "Type", "Txn Type", justify_first_right=False)
+    for s in staged:
+        acct = s["account"]
+        old_ttype = acct.transaction_type.name.title() if acct.transaction_type else "-"
+        new_ttype = s["new_ttype"].name.title() if s["new_ttype"] else old_ttype
+        table.add_row(
+            acct.name,
+            s["new_name"] or acct.name,
+            (s["new_type"] or acct.type).value,
+            new_ttype,
+        )
+
+    if not _confirm(table, "Apply these account updates?"):
+        return "User declined. Nothing was written. Ask what they'd like to change."
+
+    for s in staged:
+        try:
+            update_account(
+                session,
+                s["account"].name,
+                new_name=s["new_name"],
+                new_type=s["new_type"],
+                new_transaction_type=s["new_ttype"],
+            )
+        except Exception as e:
+            session.rollback()
+            return f"Update failed: {e}. Some changes may not have been applied; ask the user how to proceed."
+    return f"Confirmed. Updated {len(staged)} account(s)."
+
+
+@beta_tool
 def set_budgets(budgets: list[dict]) -> str:
     """Create budget categories or set existing ones to a new absolute amount, after
     showing a before/after table and getting confirmation.
@@ -329,5 +406,6 @@ ALL_TOOLS = [
     record_transactions,
     create_accounts,
     adjust_accounts,
+    update_accounts,
     set_budgets,
 ]
