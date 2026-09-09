@@ -18,6 +18,7 @@ from src.budget_categories.model import BudgetCategory
 from src.helpers import cents_to_dollars_str
 from src.transactions.infra import create_transaction
 from src.transactions.model import TransactionDirection, TransactionType
+from src.transfers.infra import transfer
 from src.view_helpers import get_active_accounts, new_table
 
 console = Console()
@@ -357,6 +358,74 @@ def update_accounts(updates: list[dict]) -> str:
 
 
 @beta_tool
+def pay_credit(payments: list[dict]) -> str:
+    """Pay down a credit account from a paying (non-credit) account, after showing a
+    before/after table and getting confirmation. This is a two-sided transfer: it
+    lowers the paying account's balance AND lowers what is owed on the credit account,
+    and is logged in the transfer ledger (NOT as a spending transaction).
+
+    Use this whenever the user says they paid a credit card / paid down a balance.
+    Do NOT use record_transactions for a credit payment — that would only touch one
+    account and leave the card unpaid.
+
+    Each item in `payments` is an object with:
+      - credit_account (str, required): the credit account being paid off.
+      - paying_account (str, required): the non-credit account the money comes from.
+      - amount_cents (int, required): the payment amount in cents. Must not exceed
+        what is currently owed on the credit account.
+
+    Call list_accounts first to resolve names and confirm which is the credit account.
+    Returns a message stating whether the user confirmed.
+    """
+    staged = []
+    for p in payments:
+        credit = _find_account(p["credit_account"])
+        if not credit:
+            return f"No active account named '{p['credit_account']}'. Nothing was written; ask the user to clarify."
+        if credit.type != AccountType.CREDIT:
+            return f"'{credit.name}' is not a credit account, so it can't be paid off this way. Nothing was written; ask the user to clarify."
+
+        paying = _find_account(p["paying_account"])
+        if not paying:
+            return f"No active account named '{p['paying_account']}'. Nothing was written; ask the user to clarify."
+        if paying.type == AccountType.CREDIT:
+            return f"'{paying.name}' is a credit account and can't be the paying account. Nothing was written; ask the user to clarify."
+
+        amount = int(p["amount_cents"])
+        if amount > credit.value_in_cents:
+            return f"Payment of {cents_to_dollars_str(amount)} exceeds the {cents_to_dollars_str(credit.value_in_cents)} owed on {credit.name}. Nothing was written; ask the user to confirm the amount."
+
+        staged.append({"credit": credit, "paying": paying, "amount": amount})
+
+    table = new_table("Amount", "Credit (owed)", "Paying", justify_first_right=False)
+    for s in staged:
+        credit_after = s["credit"].value_in_cents - s["amount"]
+        paying_after = s["paying"].value_in_cents - s["amount"]
+        table.add_row(
+            cents_to_dollars_str(s["amount"]),
+            f"{s['credit'].name}: {cents_to_dollars_str(s['credit'].value_in_cents)} -> {cents_to_dollars_str(credit_after)}",
+            f"{s['paying'].name}: {cents_to_dollars_str(s['paying'].value_in_cents)} -> {cents_to_dollars_str(paying_after)}",
+        )
+
+    if not _confirm(table, "Make these credit payments?"):
+        return "User declined. Nothing was written. Ask what they'd like to change."
+
+    for s in staged:
+        try:
+            transfer(
+                session,
+                s["credit"].id,
+                s["paying"].id,
+                s["amount"],
+                f"Credit payment from {s['credit'].name} to {s['paying'].name}",
+            )
+        except Exception as e:
+            session.rollback()
+            return f"Credit payment failed: {e}. Some payments may not have been applied; ask the user how to proceed."
+    return f"Confirmed. Made {len(staged)} credit payment(s)."
+
+
+@beta_tool
 def set_budgets(budgets: list[dict]) -> str:
     """Create budget categories or set existing ones to a new absolute amount, after
     showing a before/after table and getting confirmation.
@@ -407,5 +476,6 @@ ALL_TOOLS = [
     create_accounts,
     adjust_accounts,
     update_accounts,
+    pay_credit,
     set_budgets,
 ]

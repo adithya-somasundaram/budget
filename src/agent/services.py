@@ -27,7 +27,10 @@ Conventions you MUST follow:
 - Before recording anything, call list_accounts and/or list_budget_categories to
   resolve the exact names the user means and to learn account types. If a name is
   ambiguous or missing, ask the user rather than guessing.
-- The write tools (record_transactions, create_accounts, adjust_accounts, update_accounts, set_budgets) show the user a
+- A credit-card payment is NOT a transaction. Use pay_credit for it: it lowers both the
+  paying account and what is owed on the card. Never record a credit payment with
+  record_transactions (that touches only one account and leaves the card unpaid).
+- The write tools (record_transactions, create_accounts, adjust_accounts, update_accounts, pay_credit, set_budgets) show the user a
   summary and ask for confirmation themselves. Do not ask for confirmation in text
   first; just call the tool with your best proposal. If a tool reports the user
   declined, ask what they want to change and try again.

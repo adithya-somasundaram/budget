@@ -47,6 +47,7 @@ It can currently:
 - **Create accounts** — new debit/credit/cash/check/venmo/investing accounts with a starting balance.
 - **Adjust accounts** — set an account to a new value (handy for investment accounts), logged as an adjustment.
 - **Update accounts** — rename an account or change its type / exclusive transaction type.
+- **Pay credit cards** — a two-sided payment that lowers both the paying account and what's owed on the card (recorded in the transfer ledger, not as a transaction).
 - **Create and adjust budgets** — add a budget category or set an existing one to a new amount.
 
 This is the only feature that requires an [Anthropic API key](https://console.anthropic.com) stored in your local `.env` (view `.env.example` for setup) `.env` is gitignored, so your key is never committed. On startup `scripts.py` loads it automatically — no need to export anything. A real exported `ANTHROPIC_API_KEY` still takes precedence if you set one. Then just run the app and call:
