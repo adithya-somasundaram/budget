@@ -207,11 +207,23 @@ def adjust_account_value(
         raise Exception(f"No active account found with name {account_name}!")
 
     adjustment_amount_in_cents = new_value_in_cents - account.value_in_cents
-    direction = (
-        TransactionDirection.INCREMENT
-        if adjustment_amount_in_cents > 0
-        else TransactionDirection.DECREMENT
-    )
+    increasing_value = adjustment_amount_in_cents > 0
+    # create_transaction inverts direction for credit accounts (a decrement on a
+    # credit account raises what is owed), so pick the direction that makes the
+    # stored value actually land on new_value_in_cents regardless of account type.
+    is_credit = account.type == AccountType.CREDIT
+    if is_credit:
+        direction = (
+            TransactionDirection.DECREMENT
+            if increasing_value
+            else TransactionDirection.INCREMENT
+        )
+    else:
+        direction = (
+            TransactionDirection.INCREMENT
+            if increasing_value
+            else TransactionDirection.DECREMENT
+        )
 
     create_transaction(
         session,
