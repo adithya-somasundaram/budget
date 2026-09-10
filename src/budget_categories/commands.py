@@ -1,6 +1,17 @@
-from src.budget_categories.model import BudgetCategory
+"""Interactive (human) CLI for budget categories.
+
+`input()`-driven loops plus a thin print wrapper over budget_summary_text in
+src.budget_categories.infra. Operations are imported here so they stay available
+in the interactive shell via `from src.budget_categories.commands import *`.
+"""
+
 from src.helpers import cents_to_dollars_str, exit_keys
-from src.budget_categories.infra import create_budget_category, get_budget_leftover
+from src.budget_categories.infra import (
+    budget_summary_text,
+    create_budget_category,
+    deactivate_budget_category_by_name,
+    set_budget_amount,
+)
 from src.budget_categories.view import make_budget_category_panel
 
 
@@ -37,7 +48,6 @@ def bulk_create_budget_categories(session) -> None:
             session.rollback()
 
 
-
 def deactivate_budget_category(session) -> None:
     """Prompts user to select and deactivate a budget category."""
     from rich.console import Console
@@ -55,9 +65,7 @@ def deactivate_budget_category(session) -> None:
         print("Invalid budget category selected!")
         return
 
-    budget_category.is_active = False
-    session.commit()
-    print(f"Deactivated budget category {budget_category.name}")
+    deactivate_budget_category_by_name(session, budget_category.name)
 
 
 def adjust_budget_category(session) -> None:
@@ -81,35 +89,12 @@ def adjust_budget_category(session) -> None:
     if new_amount.lower() in exit_keys:
         return
 
-    budget_category.amount_in_cents = int(new_amount)
-    session.commit()
+    set_budget_amount(session, budget_category.name, int(new_amount))
     print(
-        f"Adjusted budget category {budget_category.name} to new amount {cents_to_dollars_str(budget_category.amount_in_cents)}"
+        f"Adjusted budget category {budget_category.name} to new amount {cents_to_dollars_str(int(new_amount))}"
     )
 
 
 def print_budget_summary(session) -> None:
     """Prints all active budget categories and remaining liquid assets after budgets."""
-    categories = (
-        session.query(BudgetCategory.name, BudgetCategory.amount_in_cents)
-        .filter(BudgetCategory.is_active == True)
-        .order_by(BudgetCategory.name.asc())
-        .all()
-    )
-
-    if len(categories) == 0:
-        print("No active budget categories.")
-        return
-
-    output = ""
-
-    max_name_len = max(len(c.name) for c in categories)
-    label_len = max(max_name_len, len("LEFTOVER"))
-
-    for category in categories:
-        output += f"{category.name:<{label_len}} : {cents_to_dollars_str(category.amount_in_cents)}\n"
-
-    leftover = get_budget_leftover(session)
-
-    output += f"{'LEFTOVER':<{label_len}} : {cents_to_dollars_str(leftover)}"
-    print(output)
+    print(budget_summary_text(session))

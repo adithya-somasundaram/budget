@@ -1,8 +1,10 @@
-from datetime import datetime
+from datetime import date, datetime
+
+from sqlalchemy.sql import func
 
 from src.accounts.model import Account, AccountType
 from src.budget_categories.model import BudgetCategory
-from src.helpers import pacific_timezone
+from src.helpers import cents_to_dollars_str, pacific_timezone
 from src.transactions.model import Transaction, TransactionDirection, TransactionType
 
 
@@ -83,3 +85,42 @@ def create_transaction(
         print(
             f"Could not create transaction of type {str(transaction_type)} and amount {str(amount_in_cents)}"
         )
+
+
+def transactions_text(session, from_date: date = None) -> str:
+    """Builds the grouped-by-date transactions string from `from_date` onward
+    (defaults to today). Returns the text so both the human CLI (which prints it)
+    and the agent (which embeds it) share the same compute+format logic.
+    """
+    if from_date is None:
+        from_date = datetime.now(pacific_timezone).date()
+
+    transaction_groups = (
+        session.query(
+            Transaction.date_of_transaction,
+            func.group_concat(
+                Transaction.type.op("||")("/")
+                .op("||")(Transaction.amount_in_cents)
+                .op("||")("/")
+                .op("||")(Transaction.description)
+            ).label("transactions"),
+        )
+        .filter(Transaction.date_of_transaction >= from_date)
+        .group_by(Transaction.date_of_transaction)
+    ).all()
+
+    output = ""
+    for group in transaction_groups:
+        day, transactions_for_date = group[0], group[1].split(",")
+        output += f"\n{day}\n"
+
+        day_total_in_cents = 0
+        for tr in transactions_for_date:
+            t_type, t_amount_in_cents, t_description = tr.split("/")
+            amount_str = cents_to_dollars_str(int(t_amount_in_cents))
+            output += "{0} \t{1:10} \t{2}\n".format(t_type, amount_str, t_description)
+            day_total_in_cents += int(t_amount_in_cents)
+
+        output += f"Total spent on {day}: {cents_to_dollars_str(day_total_in_cents)}\n"
+
+    return output.rstrip("\n")
