@@ -358,6 +358,75 @@ def update_accounts(updates: list[dict]) -> str:
 
 
 @beta_tool
+def transfer_funds(transfers: list[dict]) -> str:
+    """Move money between two of your own accounts (e.g. checking -> investing, or
+    checking -> savings), after showing a before/after table and getting confirmation.
+
+    A transfer is NOT a transaction and NOT income or spending: money leaves one of
+    your accounts and lands in another, so your net worth is unchanged. It lowers the
+    source account and raises the destination account, and is logged in the transfer
+    ledger. Use this whenever the user says they moved / transferred money between
+    their own accounts. Do NOT use record_transactions for this (that would only touch
+    one account and mislabel it as spending or income).
+
+    For paying off a credit card, use pay_credit instead, not this tool.
+
+    Each item in `transfers` is an object with:
+      - from_account (str, required): the account the money comes from (non-credit).
+      - to_account (str, required): the account the money goes to.
+      - amount_cents (int, required): the amount in cents. Must not exceed the source
+        account's balance.
+
+    Call list_accounts first to resolve names. Returns a message stating whether the
+    user confirmed.
+    """
+    staged = []
+    for tr in transfers:
+        src = _find_account(tr["from_account"])
+        if not src:
+            return f"No active account named '{tr['from_account']}'. Nothing was written; ask the user to clarify."
+        if src.type == AccountType.CREDIT:
+            return f"'{src.name}' is a credit account — to pay it down use pay_credit, not a transfer. Nothing was written."
+
+        dst = _find_account(tr["to_account"])
+        if not dst:
+            return f"No active account named '{tr['to_account']}'. Nothing was written; ask the user to clarify."
+
+        amount = int(tr["amount_cents"])
+        if amount > src.value_in_cents:
+            return f"Transfer of {cents_to_dollars_str(amount)} exceeds {src.name}'s balance of {cents_to_dollars_str(src.value_in_cents)}. Nothing was written; ask the user to confirm the amount."
+
+        staged.append({"src": src, "dst": dst, "amount": amount})
+
+    table = new_table("Amount", "From", "To", justify_first_right=False)
+    for s in staged:
+        src_after = s["src"].value_in_cents - s["amount"]
+        dst_after = s["dst"].value_in_cents + s["amount"]
+        table.add_row(
+            cents_to_dollars_str(s["amount"]),
+            f"{s['src'].name}: {cents_to_dollars_str(s['src'].value_in_cents)} -> {cents_to_dollars_str(src_after)}",
+            f"{s['dst'].name}: {cents_to_dollars_str(s['dst'].value_in_cents)} -> {cents_to_dollars_str(dst_after)}",
+        )
+
+    if not _confirm(table, "Make these transfers?"):
+        return "User declined. Nothing was written. Ask what they'd like to change."
+
+    for s in staged:
+        try:
+            transfer(
+                session,
+                s["src"].id,
+                s["dst"].id,
+                s["amount"],
+                f"Transfer from {s['src'].name} to {s['dst'].name}",
+            )
+        except Exception as e:
+            session.rollback()
+            return f"Transfer failed: {e}. Some transfers may not have been applied; ask the user how to proceed."
+    return f"Confirmed. Made {len(staged)} transfer(s)."
+
+
+@beta_tool
 def pay_credit(payments: list[dict]) -> str:
     """Pay down a credit account from a paying (non-credit) account, after showing a
     before/after table and getting confirmation. This is a two-sided transfer: it
@@ -476,6 +545,7 @@ ALL_TOOLS = [
     create_accounts,
     adjust_accounts,
     update_accounts,
+    transfer_funds,
     pay_credit,
     set_budgets,
 ]
