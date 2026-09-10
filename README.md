@@ -47,6 +47,7 @@ It can currently:
 - **Create accounts** — new debit/credit/cash/check/venmo/investing accounts with a starting balance.
 - **Adjust accounts** — set an account to a new value (handy for investment accounts), logged as an adjustment.
 - **Update accounts** — rename an account or change its type / exclusive transaction type.
+- **Transfer between accounts** — move money from one of your accounts to another (e.g. checking to investing); net worth unchanged, recorded in the transfer ledger.
 - **Pay credit cards** — a two-sided payment that lowers both the paying account and what's owed on the card (recorded in the transfer ledger, not as a transaction).
 - **Create and adjust budgets** — add a budget category or set an existing one to a new amount.
 
