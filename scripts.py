@@ -21,10 +21,10 @@ def _load_dotenv(path=".env"):
 _load_dotenv()
 
 from app import *
-from src.accounts.services import *
-from src.budget_categories.services import *
-from src.transfers.services import *
-from src.transactions.services import *
+from src.accounts.commands import *
+from src.budget_categories.commands import *
+from src.transfers.commands import *
+from src.transactions.commands import *
 from src.agent.services import agent
 
 app.app_context().push()
