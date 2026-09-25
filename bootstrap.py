@@ -28,5 +28,13 @@ _load_dotenv()
 
 from app import app, db, session
 
+# Import every domain's models BEFORE create_all() so they are registered on
+# db.metadata — otherwise create_all() runs against empty metadata and makes no
+# tables (the models would only get imported later by the entry point).
+import src.accounts.model  # noqa: E402,F401
+import src.budget_categories.model  # noqa: E402,F401
+import src.transactions.model  # noqa: E402,F401
+import src.transfers.model  # noqa: E402,F401
+
 app.app_context().push()
 db.create_all()
