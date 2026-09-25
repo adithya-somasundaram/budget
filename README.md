@@ -24,10 +24,10 @@ pip install -r requirements.txt
 To start the application in a terminal shell run:
 
 ```
-python -i scripts.py
+python -i shell.py
 ```
 
-This will create the DB if its your first time running, and import all service functions for use. Some of the most useful:
+This will create the DB if its your first time running, and import all the interactive input functions for use. (For the natural-language agent instead, run `python -i chat.py` — see below.) Some of the most useful:
 
 - `bulk_create_accounts`: Will prompt you to input account name, type (debit, credit, venmo, cash, check, investing), and value
 - `adjust_account_value`: Allows you to adjust the value of a given account. Records a transaction to track adjustment.
@@ -39,7 +39,7 @@ This will create the DB if its your first time running, and import all service f
 
 ## Agent (natural-language entry)
 
-`agent()` opens a conversational assistant where you can describe your transactions, budget changes, and account work in plain language (e.g. "spent $42 on groceries from keypoint, got my $2000 paycheck"). It maps them onto the same functions above, shows you a summary table of exactly what it's about to write, and only commits after you confirm — nothing touches the DB without an explicit yes.
+Run `python -i chat.py` to boot straight into the agent — a conversational assistant where you can describe your transactions, budget changes, and account work in plain language (e.g. "spent $42 on groceries from keypoint, got my $2000 paycheck"). It maps them onto the same operations above, shows you a summary table of exactly what it's about to write, and only commits after you confirm — nothing touches the DB without an explicit yes.
 
 It can currently:
 
@@ -51,8 +51,10 @@ It can currently:
 - **Pay credit cards** — a two-sided payment that lowers both the paying account and what's owed on the card (recorded in the transfer ledger, not as a transaction).
 - **Create and adjust budgets** — add a budget category or set an existing one to a new amount.
 
-This is the only feature that requires an [Anthropic API key](https://console.anthropic.com) stored in your local `.env` (view `.env.example` for setup) `.env` is gitignored, so your key is never committed. On startup `scripts.py` loads it automatically — no need to export anything. A real exported `ANTHROPIC_API_KEY` still takes precedence if you set one. Then just run the app and call:
+This is the only feature that requires an [Anthropic API key](https://console.anthropic.com) stored in your local `.env` (view `.env.example` for setup) `.env` is gitignored, so your key is never committed. On startup `bootstrap.py` loads it automatically — no need to export anything. A real exported `ANTHROPIC_API_KEY` still takes precedence if you set one. Then just run:
 
 ```
-agent()
+python -i chat.py
 ```
+
+The agent starts immediately; type `quit` or `exit` to drop to the Python prompt. You can also call `agent()` again from there.

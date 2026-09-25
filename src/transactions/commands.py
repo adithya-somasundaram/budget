@@ -1,12 +1,16 @@
-from datetime import date, datetime
+"""Interactive (human) CLI for transactions.
 
-from sqlalchemy.sql import func
+`input()`-driven creation flow plus a thin print wrapper over transactions_text
+in src.transactions.infra.
+"""
+
+from datetime import date
 
 from src.accounts.model import Account
 from src.budget_categories.model import BudgetCategory
-from src.helpers import cents_to_dollars_str, pacific_timezone, exit_keys
-from src.transactions.infra import create_transaction
-from src.transactions.model import Transaction, TransactionDirection, TransactionType
+from src.helpers import exit_keys
+from src.transactions.infra import create_transaction, transactions_text
+from src.transactions.model import TransactionDirection, TransactionType
 
 
 def create_transaction_input_helper(
@@ -89,36 +93,9 @@ def create_transaction_input_helper(
         return True
 
 
-def view_all_transactions(
-    session, from_date: date = datetime.now(pacific_timezone).date()
-) -> None:
-    """Gets and groups all transactions by date. Prints each days transactions along with summary from that date"""
-    transaction_groups = (
-        session.query(
-            Transaction.date_of_transaction,
-            func.group_concat(
-                Transaction.type.op("||")("/")
-                .op("||")(Transaction.amount_in_cents)
-                .op("||")("/")
-                .op("||")(Transaction.description)
-            ).label("transactions"),
-        )
-        .filter(Transaction.date_of_transaction >= from_date)
-        .group_by(Transaction.date_of_transaction)
-    ).all()
-
-    for group in transaction_groups:
-        day, transactions_for_date = group[0], group[1].split(",")
-        print(f"\n{day}")
-
-        day_total_in_cents = 0
-        for tr in transactions_for_date:
-            t_type, t_amount_in_cents, t_description = tr.split("/")
-            amount_str = cents_to_dollars_str(int(t_amount_in_cents))
-            print("{0} \t{1:10} \t{2}".format(t_type, amount_str, t_description))
-            day_total_in_cents += int(t_amount_in_cents)
-
-        print(f"Total spent on {day}: {cents_to_dollars_str(day_total_in_cents)}")
+def view_all_transactions(session, from_date: date = None) -> None:
+    """Prints all transactions from `from_date` onward (defaults to today), grouped by date."""
+    print(transactions_text(session, from_date))
 
 
 def bulk_create_transactions(session) -> None:
