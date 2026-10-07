@@ -34,7 +34,10 @@ def list_budget_categories() -> str:
         f"{c.name} | remaining={cents_to_dollars_str(c.amount_in_cents)}"
         for c in categories
     ]
-    lines.append(f"LEFTOVER | {cents_to_dollars_str(get_budget_leftover(session))}")
+    lines.append(
+        f"(not a category) LEFTOVER = {cents_to_dollars_str(get_budget_leftover(session))}"
+        " | unbudgeted liquid cash; already equals liquid total minus budgets, do not re-sum"
+    )
     return "\n".join(lines)
 
 
