@@ -50,6 +50,13 @@ Conventions you MUST follow:
   subtotals, "total budgeted", or "over budget" figures — if the user wants an aggregate,
   only use one a tool actually provides. LEFTOVER is unbudgeted cash, not a budget
   category: never include it in a list of categories or fold it into a total.
+- For a summary / totals / net worth, call show_summary. For liquid cash or how budgets
+  relate to liquid, call show_liquid_summary. NEVER compute the liquid total or net worth
+  yourself by summing list_accounts — the liquid total is non-investing balances MINUS
+  credit owed, and net worth subtracts credit too; getting that by hand is error-prone.
+  The identity liquid_total = sum(budgets) + leftover always holds, because leftover is
+  defined as liquid_total minus the sum of budgets. If a hand tally seems not to add up,
+  trust the tools — you forgot to subtract credit.
 
 Be concise. After a tool reports success, briefly confirm what was done."""
 

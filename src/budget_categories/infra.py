@@ -4,16 +4,15 @@ from src.helpers import cents_to_dollars_str
 
 
 def get_budget_leftover(session) -> int:
-    """Returns unbudgeted liquid cash in cents: liquid total minus money still
-    earmarked in budgets. This equals liquid total minus the sum of budgets while
-    budgets are healthy; an overspent (negative) category counts as 0 earmarked so
-    it does not inflate the leftover (the overage already left the accounts and is
-    reflected in the liquid total)."""
-    earmarked = sum(
-        max(0, category.amount_in_cents)
+    """Returns unbudgeted liquid cash in cents: the liquid total minus the sum of all
+    active budget category amounts (overspent/negative categories included). Computed
+    on the fly, never stored. Adding a dollar to any budget lowers leftover by a
+    dollar; an over-budget (negative) category raises leftover by its overage."""
+    budget_total = sum(
+        category.amount_in_cents
         for category in _get_all_active_budget_categories(session)
     )
-    return get_liquid_total(session) - earmarked
+    return get_liquid_total(session) - budget_total
 
 
 def create_budget_category(session, name: str, amount_in_cents=0) -> None:
