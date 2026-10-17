@@ -9,9 +9,11 @@ from anthropic import beta_tool
 
 from app import session
 from src.accounts.infra import (
+    account_summary_text,
     adjust_account_value,
     create_new_account,
     get_active_account_by_name,
+    liquid_summary_text,
     update_account,
 )
 from src.accounts.model import AccountType
@@ -37,6 +39,30 @@ def list_accounts() -> str:
         for a in accounts
     ]
     return "\n".join(lines)
+
+
+@beta_tool
+def show_summary() -> str:
+    """Return the authoritative full financial summary: every active account with its
+    balance, the net TOTAL (credit balances subtracted), and the budget breakdown with
+    LEFTOVER. Use this whenever the user asks for their summary, totals, or net worth.
+    The numbers are already computed correctly — relay them verbatim and do NOT add,
+    re-sum, or invent any totals, subtotals, or net-worth figures of your own.
+    """
+    return account_summary_text(session, include_budget=True)
+
+
+@beta_tool
+def show_liquid_summary() -> str:
+    """Return the authoritative liquid summary: all non-investing accounts and the
+    liquid TOTAL. The liquid total is defined as the sum of non-investing account
+    balances MINUS credit balances owed (credit reduces liquid cash) — this tool does
+    that math for you. Budget LEFTOVER is exactly this liquid total minus the sum of
+    all budgets, so liquid total = sum(budgets) + leftover. Use this whenever the user
+    asks about liquid cash or how budgets relate to liquid total. Relay the numbers
+    verbatim; do NOT recompute the liquid total yourself.
+    """
+    return liquid_summary_text(session)
 
 
 @beta_tool

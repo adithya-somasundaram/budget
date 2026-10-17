@@ -15,6 +15,8 @@ from src.accounts.agent import (
     adjust_accounts,
     create_accounts,
     list_accounts,
+    show_liquid_summary,
+    show_summary,
     update_accounts,
 )
 from src.budget_categories.agent import list_budget_categories, set_budgets
@@ -24,6 +26,8 @@ from src.transfers.agent import pay_credit, transfer_funds
 ALL_TOOLS = [
     list_accounts,
     list_budget_categories,
+    show_summary,
+    show_liquid_summary,
     record_transactions,
     create_accounts,
     adjust_accounts,
